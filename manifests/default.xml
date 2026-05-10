@@ -30,9 +30,10 @@
   <!-- Raspberry Pi BSP -->
   <project name="meta-raspberrypi" path="sources/meta-raspberrypi" remote="yocto" revision="scarthgap"/>
 
-  <!-- Qt 6 (need a SHA that ships Qt 6.8.3 - default Scarthgap branch may track 6.6.x) -->
-  <!-- TODO: pin to a SHA on the scarthgap branch that includes Qt 6.8.3, or override SRCREV in bbappend -->
-  <project name="meta-qt6" path="sources/meta-qt6" remote="qt" revision="scarthgap"/>
+  <!-- Qt 6.8.3 LTS - meta-qt6 uses Qt-version branch names, not Yocto release names -->
+  <project name="meta-qt6" path="sources/meta-qt6" remote="qt"
+           revision="00c3bd954341a2a755fdee6b978af952f51793e7"
+           upstream="6.8.3"/>
 
   <!-- Latest Rust on Scarthgap via LTS mixin -->
   <!-- TODO: pin SHA -->
