@@ -189,7 +189,12 @@ if [ "${1:-}" = "clean" ]; then
     fi
     echo ">>> wiping /yocto/astraos on ${BUILDER_USER}@${BUILDER_HOST} and re-bootstrapping from GitHub"
     echo ">>> /yocto/{sstate,downloads} preserved"
-    exec ssh -t -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
+    if [ -t 0 ] && [ -t 1 ]; then
+        clean_ssh_tty="-t"
+    else
+        clean_ssh_tty=""
+    fi
+    exec ssh ${clean_ssh_tty} -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
         ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL}" 'bash -s' <<'REMOTE_CLEAN'
 set -euo pipefail
 cd /
