@@ -111,9 +111,17 @@ on port 8765.
 
 ## Networking & Connectivity
 
+- **`nexus`** is the unified connectivity manager — Rust daemon at
+  `fi.nexus1` on the system D-Bus. It manages Ethernet, WiFi, BLE
+  and GNSS via per-technology backends, delegates IP configuration
+  to `systemd-networkd`, and stores connection profiles + paired-device
+  state under `/var/lib/nexus` (bind-mounted from `/data/var/lib/nexus`).
+  `astraX_BT`'s `platformManager` calls into `nexus` over D-Bus rather
+  than driving BlueZ / wpa-supplicant directly. See sibling repo
+  `../nexus/` and its `docs/nexus-architecture.md`.
 - `systemd-networkd` + `systemd-resolved` (no `connman`, no `NetworkManager`)
-- `wpa-supplicant` for WiFi
-- BlueZ 5 for BLE (consumed by `platformManager` inside `astraX_BT`)
+- `wpa-supplicant` for WiFi (driven by `nexus`)
+- BlueZ 5 for BLE (driven by `nexus` over D-Bus; not linked at build time)
 - Avahi mDNS, advertising `_astrax._tcp.local.` with hostname `AstraX-<serial>`
 - WebSocket server on port 8765, LAN-only (firewall to interface)
 - WiFi/BT radio is **on the Variscite VAR-SOM-MX8M-Plus** (not the `mcb`
@@ -122,8 +130,9 @@ on port 8765.
   the `linux-firmware-nxp*-sdio` package.
 - `syncManager` (in `astraX_BT`) uploads XRF test results to **AstraX cloud**.
   Authenticates via the per-device X.509 cert provisioned at factory time.
-  Endpoint, transport (HTTPS/MQTT/gRPC), retention policy, and retry/backoff
-  are open threads — see below.
+  Currently uses Qt6::Network HTTPS (no Azure IoT SDK link); endpoint,
+  transport (HTTPS / MQTT / gRPC), retention policy, and retry/backoff are
+  open threads — see below.
 
 ## Storage & Updates
 
@@ -210,7 +219,11 @@ Two image recipes in `meta-astrax/recipes-images/` sharing a base:
 
 - `meta-astrax/recipes-astrax/astrax-bt/astrax-bt_git.bb` — fetches pinned
   SRCREV, builds via `inherit cmake systemd qt6-cmake`
-- `DEPENDS = "qtbase qtdeclarative qtwebsockets qtsql protobuf protobuf-c sqlite3 bluez5"`
+- `DEPENDS = "qtbase qtdeclarative qtquickcontrols2 qtwebsockets spdlog libusb1 libgpiod sqlite3"` —
+  derived from the project's actual `find_package` / `pkg_check_modules` /
+  `target_link_libraries` calls, kept lean per design principle
+- `RDEPENDS` adds `bluez5`, `dbus`, `nexus`, `avahi-daemon` — used at
+  runtime via D-Bus, not linked at build time
 - One systemd unit per daemon (xrfapiManager, testManager, etc.) with
   explicit ordering and `Restart=on-failure`
 - Per the architecture doc, components communicate via Qt signal-slot
@@ -254,8 +267,31 @@ on Medium/Low via `CVE_CHECK_IGNORE_FILES`.
 
 ## CI/CD
 
-- Self-hosted runner pool: 16-core / 64 GB / 1 TB NVMe per concurrent build,
-  ≥2 hosts for resilience
+### Build Machine
+
+A single dedicated build server handles all Yocto builds. Local laptops do
+not run BitBake (the devcontainer can build, but practical builds go to
+the server because it has the cores, RAM, and persistent caches).
+
+| Property | Value |
+|---|---|
+| Hostname / LAN IP | `10.11.12.20` |
+| Tailscale IP | `100.82.113.92` |
+| SSH | port 22, user `akothapalli`, key-based (passwordless) |
+| Host OS | Ubuntu 26.04 |
+| CPU | 48 cores / 96 threads |
+| RAM | 1 TB |
+| Builds run inside | the AstraOS devcontainer (Ubuntu 24.04, Yocto-supported) |
+
+`scripts/build` defaults to remote execution against this host (`--local`
+opts out for tiny iteration on the dev machine). BB_NUMBER_THREADS and
+PARALLEL_MAKE auto-detect to 96 inside the container, fully utilising the
+machine.
+
+### Other CI infrastructure
+
+- Self-hosted runner pool: the build machine above is the runner;
+  ≥2 hosts in time for resilience
 - Persistent caches on local NVMe (mirrored to S3 for restore):
   - `SSTATE_DIR` shared across branches
   - `DL_DIR` upstream tarball cache
