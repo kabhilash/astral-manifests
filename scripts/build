@@ -231,16 +231,25 @@ fi
 if [ "${MODE}" = "remote" ]; then
     quoted_args=$(printf '%q ' "$@")
     echo ">>> Dispatching to ${BUILDER_USER}@${BUILDER_HOST}:${BUILDER_PATH}"
+    # Always pull AstraOS to pick up Dockerfile / scripts / manifest
+    # changes before any subcommand runs. Container previously skipped
+    # this and built against a stale .devcontainer/Dockerfile; the only
+    # legitimate reason to skip would be a chicken-and-egg case where
+    # the workspace doesn't yet exist - but in that case clean is the
+    # right command, not container.
+    #
+    # GitHub SSH occasionally drops connections from the build machine.
+    # Retry git pull 3x with backoff so a transient blip doesn't kill
+    # the chain. (repo sync has its own internal retry; only git pull
+    # needs wrapping. repo sync is skipped for `container` since the
+    # docker build doesn't touch sources/ layers.)
+    pull_step="(for i in 1 2 3; do git -C ${BUILDER_PATH} pull --ff-only && break; echo \"git pull failed (attempt \$i), retrying in 10s\"; sleep 10; done) &&"
     case "${1:-}" in
         container)
-            sync_step=""
+            sync_step="${pull_step}"
             ;;
         *)
-            # GitHub SSH occasionally drops connections from the build
-            # machine. Retry git pull 3x with backoff so a transient
-            # blip doesn't kill the whole build. (repo sync has its own
-            # internal retry; only git pull needs wrapping.)
-            sync_step="(for i in 1 2 3; do git -C ${BUILDER_PATH} pull --ff-only && break; echo \"git pull failed (attempt \$i), retrying in 10s\"; sleep 10; done) && (cd ${BUILDER_PATH} && repo sync -j16 --no-clone-bundle) &&"
+            sync_step="${pull_step} (cd ${BUILDER_PATH} && repo sync -j16 --no-clone-bundle) &&"
             ;;
     esac
     # -t forces TTY allocation, only viable when our own stdin IS a TTY.
