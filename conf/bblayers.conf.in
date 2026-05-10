@@ -20,6 +20,6 @@ BBLAYERS = " \
   @SOURCES@/meta-qt6 \
   @SOURCES@/meta-lts-mixins \
   @SOURCES@/meta-rauc \
-  @TOPDIR@/meta-astrax \
+  @SOURCES@/meta-astrax \
 @MACHINE_LAYERS@\
 "

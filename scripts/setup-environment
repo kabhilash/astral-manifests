@@ -37,7 +37,7 @@ BUILD_PATH="${ASTRAOS_ROOT}/${BUILD_DIR}"
 case "$MACHINE" in
     raspberrypi5|raspberrypi-cm5)
         MACHINE_LAYERS="  ${SOURCES_DIR}/meta-raspberrypi \\
-  ${ASTRAOS_ROOT}/meta-astrax-raspberrypi \\
+  ${SOURCES_DIR}/meta-astrax-raspberrypi \\
 "
         ;;
     imx8mp-var-som|astraos-imx8mp-mcb)
@@ -47,7 +47,7 @@ case "$MACHINE" in
   ${SOURCES_DIR}/meta-variscite-bsp-imx \\
   ${SOURCES_DIR}/meta-variscite-sdk-common \\
   ${SOURCES_DIR}/meta-variscite-sdk-imx \\
-  ${ASTRAOS_ROOT}/meta-astrax-variscite \\
+  ${SOURCES_DIR}/meta-astrax-variscite \\
 "
         ;;
     *)
