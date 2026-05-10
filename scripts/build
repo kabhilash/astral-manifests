@@ -2,32 +2,52 @@
 # AstraOS build helper.
 #
 # Single dispatcher for rebuilding the devcontainer, building image variants,
-# building the cross-SDK, and bitbake-ing any single recipe. Auto-detects
-# whether it's running on the host or inside the devcontainer; on the host
-# it docker-runs the build inside the container, inside the container it
-# just exec's bitbake directly.
+# building the cross-SDK, and bitbake-ing any single recipe.
+#
+# Defaults to remote execution against the AstraOS build machine
+# (10.11.12.20 / Tailscale 100.82.113.92, ssh user akothapalli, passwordless
+# key auth). Use --local to run against your local Docker daemon instead.
+#
+# Layered detection:
+#   * --local on a Mac/dev box      docker run on local Docker
+#   * default (no --local)          ssh akothapalli@10.11.12.20 then
+#                                   docker run there
+#   * already inside devcontainer   skip docker, just bash -c
 #
 # Usage:
-#   scripts/build container
-#   scripts/build image       <MACHINE>
-#   scripts/build prod-image
-#   scripts/build sdk         <MACHINE>
-#   scripts/build recipe      <MACHINE> <RECIPE> [TASK]
-#   scripts/build bitbake     <MACHINE> <args...>
-#   scripts/build shell       <MACHINE>
+#   scripts/build [--local | --remote] container
+#   scripts/build [--local | --remote] image       <MACHINE>
+#   scripts/build [--local | --remote] prod-image
+#   scripts/build [--local | --remote] sdk         <MACHINE>
+#   scripts/build [--local | --remote] recipe      <MACHINE> <RECIPE> [TASK]
+#   scripts/build [--local | --remote] bitbake     <MACHINE> <args...>
+#   scripts/build [--local | --remote] shell       <MACHINE>
 #
 # MACHINE: raspberrypi5 | raspberrypi-cm5 | imx8mp-var-som | astraos-imx8mp-mcb
+#
+# Override remote target with env vars (defaults shown):
+#   ASTRAOS_BUILDER_HOST=10.11.12.20
+#   ASTRAOS_BUILDER_USER=akothapalli
+#   ASTRAOS_BUILDER_PORT=22
+#   ASTRAOS_BUILDER_PATH=~/AstraOS
 
 set -euo pipefail
 
 ASTRAOS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE_TAG="astraos-builder:latest"
 
+BUILDER_HOST="${ASTRAOS_BUILDER_HOST:-10.11.12.20}"
+BUILDER_USER="${ASTRAOS_BUILDER_USER:-akothapalli}"
+BUILDER_PORT="${ASTRAOS_BUILDER_PORT:-22}"
+BUILDER_PATH="${ASTRAOS_BUILDER_PATH:-/yocto/astraos}"
+
+MODE=""    # auto by default; set by --local / --remote
+
 usage() {
-    cat <<'EOF'
+    cat <<EOF
 AstraOS build helper.
 
-Usage:
+Usage (all subcommands accept an optional --local | --remote prefix):
   scripts/build container                              Rebuild the devcontainer image
   scripts/build image       <MACHINE>                  Build astraos-image-dev for MACHINE
   scripts/build prod-image                             Build astraos-image (mcb production)
@@ -37,6 +57,10 @@ Usage:
   scripts/build shell       <MACHINE>                  Interactive shell, env sourced
 
 MACHINE: raspberrypi5 | raspberrypi-cm5 | imx8mp-var-som | astraos-imx8mp-mcb
+
+Default mode: --remote, dispatches via ssh to the build machine
+  ${BUILDER_USER}@${BUILDER_HOST}:${BUILDER_PORT} (path: ${BUILDER_PATH})
+Pass --local to run on the local Docker daemon instead.
 EOF
     exit 1
 }
@@ -92,6 +116,41 @@ _check_machine() {
             ;;
     esac
 }
+
+# Short-circuit help / empty BEFORE any mode dispatch
+case "${1:-}" in
+    ""|-h|--help|help) usage ;;
+esac
+
+# Parse leading mode flag if present
+case "${1:-}" in
+    --local)  MODE=local;  shift ;;
+    --remote) MODE=remote; shift ;;
+esac
+
+# Re-check after mode flag consumption
+case "${1:-}" in
+    ""|-h|--help|help) usage ;;
+esac
+
+# Auto-pick mode if user didn't specify
+if [ -z "${MODE}" ]; then
+    if _in_container; then
+        MODE=local         # already inside the build env; just bash -c
+    else
+        MODE=remote        # default: dispatch to the build machine
+    fi
+fi
+
+# Remote dispatch: SSH to builder and re-invoke ourselves with --local.
+# Args are passed as a single quoted string; spaces in args are preserved
+# by `printf '%q '` quoting before sending.
+if [ "${MODE}" = "remote" ]; then
+    quoted_args=$(printf '%q ' "$@")
+    echo ">>> Dispatching to ${BUILDER_USER}@${BUILDER_HOST}:${BUILDER_PATH}"
+    exec ssh -t -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
+        "cd ${BUILDER_PATH} && ./scripts/build --local ${quoted_args}"
+fi
 
 cmd="${1:-}"
 shift || true

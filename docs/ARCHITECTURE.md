@@ -281,6 +281,7 @@ the server because it has the cores, RAM, and persistent caches).
 | Host OS | Ubuntu 26.04 |
 | CPU | 48 cores / 96 threads |
 | RAM | 1 TB |
+| Workspace path | `/yocto/astraos/` |
 | Builds run inside | the AstraOS devcontainer (Ubuntu 24.04, Yocto-supported) |
 
 `scripts/build` defaults to remote execution against this host (`--local`
