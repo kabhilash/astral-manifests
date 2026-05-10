@@ -365,13 +365,19 @@ when the time comes.
 | RPi RAUC bootloader path | tryboot vs u-boot-rauc | During RAUC integration |
 | Kernel CONFIG fragments | Derive from `astraX_BT` hardware needs | During first kernel build |
 | `astraX_BT` process structure | Single binary or split daemons? | Confirm during recipe authoring |
-| Source code hosting | Assumed `github.com/AstraA` | Confirm before manifest URLs lock |
 
 ## Source-of-Truth Pointers
 
 - Variscite BSP release notes:
   https://dev.variscite.com/var-som-mx8m-plus/mx8mp-yocto-scarthgap-6.6.y_2.2.2-v1.2/release-notes/
-- `astraX_BT` (XRF Benchtop application): sibling repo at `../astraX_BT/`
+- AstraOS (this repo): `git@github.com:kabhilash/astraos-manifests.git`
+- `meta-astrax`: `git@github.com:kabhilash/meta-astrax.git`
+- `meta-astrax-raspberrypi`: `git@github.com:kabhilash/meta-astrax-raspberrypi.git`
+- `meta-astrax-variscite`: `git@github.com:kabhilash/meta-astrax-variscite.git`
+- `nexus` (Rust connectivity manager): `https://github.com/kabhilash/nexus.git`
+- `astraX_BT` (XRF Benchtop application): sibling repo at `../astraX_BT/` —
+  GitHub: `git@github.com:AstraAnalytical/astraX_BT.git` (different org;
+  the build machine's SSH key has read access)
   - Architecture doc: `astraX_BT/Docs/ARCHITECTURE.md`
   - Service discovery: `astraX_BT/Docs/SERVICE_DISCOVERY.md`
 - meta-qt6 (need SRCREV that ships Qt 6.8.3 on Scarthgap):
