@@ -48,5 +48,6 @@ BB_SIGNATURE_HANDLER = "OEEquivHash"
 SSTATE_DIR ?= "/yocto/sstate/${MACHINE}"
 DL_DIR     ?= "/yocto/downloads"
 
-# Accept NXP/Vivante proprietary licenses (required for imx-gpu-viv)
-LICENSE_FLAGS_ACCEPTED = "commercial Freescale-EULA"
+# LICENSE_FLAGS_ACCEPTED is set in meta-astrax/conf/distro/astraos.conf -
+# don't shadow it here. (Earlier this file hard-set the variable, which
+# masked distro additions like synaptics-killswitch for RPi 5 firmware.)
