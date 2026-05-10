@@ -24,6 +24,29 @@ validated in pieces on Variscite Symphony v1.7 with HAB in test mode (fuses
 unblown), but a clean production dry run requires real hardware. Plan
 production-image milestones around `mcb` arrival, not earlier.
 
+## Design Principles
+
+These shape every package, recipe, and feature decision. Read before
+adding anything to `IMAGE_INSTALL`, `TOOLCHAIN_TARGET_TASK`, or
+`DISTRO_FEATURES`.
+
+1. **Lean production image; lean SDK.** Only ship what's needed at
+   runtime / what app developers need at build. No qtwebengine, no
+   qtmultimedia, no debug CLIs, no exploratory packages "in case
+   someone wants them later." Bloat in embedded products is a long-tail
+   liability — eMMC pressure, longer OTA windows, more attack surface,
+   more CVE noise, slower boot. Default to dev-image-only or omit
+   entirely; promote to production only with a stated runtime need.
+2. **Read-only by default.** Anything mutable goes through `/data`.
+   Code can't write to `/etc`, `/var`, `/opt` — that's a feature.
+3. **Reproducible.** Every artifact (wic, RAUC bundle, SDK installer,
+   SBOM, CVE report) traces to a single git SHA. No build-machine
+   nondeterminism.
+4. **Production-vs-dev images split cleanly.** Production target
+   (`astraos-imx8mp-mcb`) is signed, dm-verity, HMI-only. Dev images
+   (RPi5, CM5, Variscite Symphony) get debug tools, SSH, writable
+   rootfs. Never mix.
+
 ## Foundation
 
 | Item | Choice |
