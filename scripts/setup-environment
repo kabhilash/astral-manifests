@@ -30,7 +30,7 @@ if [ "$#" -lt 1 ]; then
 fi
 
 MACHINE="$1"
-BUILD_DIR="${2:-build-${MACHINE}}"
+BUILD_DIR="${2:-build}"
 BUILD_PATH="${ASTRAOS_ROOT}/${BUILD_DIR}"
 
 # Per-MACHINE BBLAYERS extensions
@@ -66,18 +66,16 @@ fi
 # shellcheck disable=SC1091
 source "${SOURCES_DIR}/poky/oe-init-build-env" "${BUILD_PATH}" >/dev/null
 
-# Generate bblayers.conf from template
+# Always regenerate bblayers.conf and local.conf on every source so that
+# switching MACHINE works in the single shared build/ dir. sstate-cache
+# makes the rebuild after a MACHINE switch fast (mostly cache hits).
 sed -e "s|@SOURCES@|${SOURCES_DIR}|g" \
     -e "s|@TOPDIR@|${ASTRAOS_ROOT}|g" \
     -e "s|@MACHINE_LAYERS@|${MACHINE_LAYERS}|g" \
     "${ASTRAOS_ROOT}/conf/bblayers.conf.in" > "${BUILD_PATH}/conf/bblayers.conf"
 
-# Generate local.conf from template (only on first init - preserve user edits)
-if [ ! -f "${BUILD_PATH}/conf/local.conf.astraos-generated" ]; then
-    sed -e "s|@MACHINE@|${MACHINE}|g" \
-        "${ASTRAOS_ROOT}/conf/local.conf.in" > "${BUILD_PATH}/conf/local.conf"
-    touch "${BUILD_PATH}/conf/local.conf.astraos-generated"
-fi
+sed -e "s|@MACHINE@|${MACHINE}|g" \
+    "${ASTRAOS_ROOT}/conf/local.conf.in" > "${BUILD_PATH}/conf/local.conf"
 
 echo ""
 echo "AstraOS build env ready."
