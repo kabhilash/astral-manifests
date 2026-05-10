@@ -26,9 +26,26 @@
     // Yocto and bind-mount safety
     "postCreateCommand": "sudo chown builder:builder /workspaces/sstate-cache /workspaces/downloads && git config --global --add safe.directory '*'",
 
-    // Resource hints for the host (Docker Desktop / Docker Engine)
+    // runArgs:
+    //   --shm-size=2g           : some Qt6 / WebKit recipes need more than
+    //                             Docker's 64 MB default
+    //   --security-opt apparmor=unconfined
+    //                           : Ubuntu 24.04 hosts default to
+    //                             kernel.apparmor_restrict_unprivileged_userns=1
+    //                             which blocks BitBake's `pseudo` (fakeroot
+    //                             replacement) from creating unprivileged user
+    //                             namespaces. Yocto builds fail at do_rootfs
+    //                             without this. Container code is trusted
+    //                             (your own Yocto build), so unconfining is
+    //                             acceptable.
+    //   --security-opt seccomp=unconfined
+    //                           : belt-and-braces; some unshare() syscalls
+    //                             on the pseudo path get caught by Docker's
+    //                             default seccomp profile on certain kernels.
     "runArgs": [
-        "--shm-size=2g"
+        "--shm-size=2g",
+        "--security-opt", "apparmor=unconfined",
+        "--security-opt", "seccomp=unconfined"
     ],
 
     "customizations": {
