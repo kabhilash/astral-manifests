@@ -73,17 +73,36 @@ _in_container() {
     [ -f /.dockerenv ] || [ -n "${REMOTE_CONTAINERS:-}" ]
 }
 
+_dockerfile_hash() {
+    sha256sum "${ASTRAOS_ROOT}/.devcontainer/Dockerfile" 2>/dev/null | cut -d' ' -f1
+}
+
+# Rebuild the container whenever .devcontainer/Dockerfile changes. The
+# Dockerfile's sha256 is stamped onto the image as a label; we compare
+# the current file's hash to the label on each invocation. Skip when
+# they match (fast: just a hash + docker inspect, ~50ms total).
 _ensure_image() {
-    if ! docker image inspect "${IMAGE_TAG}" >/dev/null 2>&1; then
-        echo ">>> Container image not found; building it first..."
-        _build_container
+    local current_hash cached_hash
+    current_hash=$(_dockerfile_hash)
+    cached_hash=$(docker image inspect --format='{{index .Config.Labels "astraos.dockerfile_sha256"}}' "${IMAGE_TAG}" 2>/dev/null || echo "")
+    if [ -n "${current_hash}" ] && [ "${current_hash}" = "${cached_hash}" ]; then
+        return 0
     fi
+    if [ -z "${cached_hash}" ]; then
+        echo ">>> Container image missing; building..."
+    else
+        echo ">>> Dockerfile changed since last build; rebuilding container..."
+    fi
+    _build_container
 }
 
 _build_container() {
+    local current_hash
+    current_hash=$(_dockerfile_hash)
     docker build \
         --build-arg USER_UID="$(id -u 2>/dev/null || echo 1000)" \
         --build-arg USER_GID="$(id -g 2>/dev/null || echo 1000)" \
+        --label "astraos.dockerfile_sha256=${current_hash}" \
         -t "${IMAGE_TAG}" \
         "${ASTRAOS_ROOT}/.devcontainer"
 }
