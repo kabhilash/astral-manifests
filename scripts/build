@@ -119,7 +119,14 @@ _run() {
         else
             workspace_src="${ASTRAOS_ROOT}"
         fi
-        docker run --rm -it \
+        # -i and -t need a TTY at the caller's end. When running headless
+        # (CI, run_in_background, scripted), drop them so docker doesn't
+        # error with "cannot attach stdin to a TTY-enabled container".
+        local docker_tty=""
+        if [ -t 0 ] && [ -t 1 ]; then
+            docker_tty="-it"
+        fi
+        docker run --rm ${docker_tty} \
             -v "${workspace_src}:/yocto/astraos" \
             ${sstate_mount} \
             ${dl_mount} \
@@ -217,7 +224,14 @@ if [ "${MODE}" = "remote" ]; then
             sync_step="git -C ${BUILDER_PATH} pull --ff-only && (cd ${BUILDER_PATH} && repo sync -j16 --no-clone-bundle) &&"
             ;;
     esac
-    exec ssh -t -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
+    # -t forces TTY allocation, only viable when our own stdin IS a TTY.
+    # Without a TTY, ssh -t fails with "Pseudo-terminal will not be allocated".
+    if [ -t 0 ] && [ -t 1 ]; then
+        ssh_tty="-t"
+    else
+        ssh_tty=""
+    fi
+    exec ssh ${ssh_tty} -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
         "${sync_step} cd ${BUILDER_PATH} && ./scripts/build --local ${quoted_args}"
 fi
 
