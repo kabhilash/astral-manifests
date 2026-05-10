@@ -25,6 +25,13 @@ BB_DISKMON_DIRS ??= "\
 
 CONF_VERSION = "2"
 
+# Parallelism: use every core/thread the host offers. The build machine has
+# 96 threads / 1 TB RAM, so memory pressure isn't a concern even at full
+# concurrency. oe.utils.cpu_count() auto-adjusts on smaller hosts (a
+# developer's --local laptop, etc.) so this stays portable.
+BB_NUMBER_THREADS ?= "${@oe.utils.cpu_count()}"
+PARALLEL_MAKE     ?= "-j ${@oe.utils.cpu_count()}"
+
 # Reproducible builds (see docs/ARCHITECTURE.md - Compliance section)
 BB_HASHSERVE = "auto"
 BB_SIGNATURE_HANDLER = "OEEquivHash"

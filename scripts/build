@@ -47,8 +47,9 @@ usage() {
     cat <<EOF
 AstraOS build helper.
 
-Usage (all subcommands accept an optional --local | --remote prefix):
+Usage (most subcommands accept an optional --local | --remote prefix):
   scripts/build container                              Rebuild the devcontainer image
+  scripts/build clean                                  Wipe /yocto/astraos on builder + repo sync (sstate/downloads preserved)
   scripts/build image       <MACHINE>                  Build astraos-image-dev for MACHINE
   scripts/build prod-image                             Build astraos-image (mcb production)
   scripts/build sdk         <MACHINE>                  Build astraos-sdk for MACHINE
@@ -163,6 +164,35 @@ if [ -z "${MODE}" ]; then
     else
         MODE=remote        # default: dispatch to the build machine
     fi
+fi
+
+# clean: special-case dispatch BEFORE the cd-and-recurse remote pattern,
+# because clean deletes the workspace it would otherwise cd into.
+if [ "${1:-}" = "clean" ]; then
+    if _in_container; then
+        echo "ERROR: 'clean' must run from the host, not inside the container" >&2
+        exit 1
+    fi
+    if [ "${MODE}" = "local" ]; then
+        echo "ERROR: 'clean' targets the build machine; remove --local" >&2
+        exit 1
+    fi
+    echo ">>> wiping /yocto/astraos on ${BUILDER_USER}@${BUILDER_HOST} and re-bootstrapping"
+    echo ">>> /yocto/{sstate,downloads,repos} preserved"
+    exec ssh -t -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" 'bash -s' <<'REMOTE_CLEAN'
+set -euo pipefail
+cd /
+rm -rf /yocto/astraos
+git clone /yocto/repos/astraos.git /yocto/astraos
+cd /yocto/astraos
+echo ">>> HEAD = $(git log --oneline -1)"
+echo ">>> repo init"
+repo init -u file:///yocto/repos/astraos.git -m manifests/default.xml --no-clone-bundle
+echo ">>> repo sync"
+repo sync -j16 --no-clone-bundle
+echo ">>> sources/:"
+ls /yocto/astraos/sources/ | sort
+REMOTE_CLEAN
 fi
 
 # Remote dispatch: SSH to builder and re-invoke ourselves with --local.
