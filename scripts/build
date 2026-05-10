@@ -119,6 +119,15 @@ _run() {
         else
             workspace_src="${ASTRAOS_ROOT}"
         fi
+        # Bind host's ~/.ssh read-only into the container so bitbake's git
+        # fetcher can clone private repos over SSH (astrax-bt lives on
+        # AstraAnalytical, requires SSH auth). Host UID matches container
+        # UID (USER_UID build-arg = host uid), so key file perms carry
+        # through. RO mount means the container can't tamper with keys.
+        local ssh_mount=""
+        if [ -d "${HOME}/.ssh" ]; then
+            ssh_mount="-v ${HOME}/.ssh:/home/builder/.ssh:ro"
+        fi
         # -i and -t need a TTY at the caller's end. When running headless
         # (CI, run_in_background, scripted), drop them so docker doesn't
         # error with "cannot attach stdin to a TTY-enabled container".
@@ -130,6 +139,7 @@ _run() {
             -v "${workspace_src}:/yocto/astraos" \
             ${sstate_mount} \
             ${dl_mount} \
+            ${ssh_mount} \
             --shm-size=2g \
             --security-opt apparmor=unconfined \
             --security-opt seccomp=unconfined \
