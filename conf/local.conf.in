@@ -29,11 +29,16 @@ CONF_VERSION = "2"
 BB_HASHSERVE = "auto"
 BB_SIGNATURE_HANDLER = "OEEquivHash"
 
-# Shared caches on the build machine, mounted into the container at the
-# same path. /yocto is host-owned by the build machine; on a Mac running
-# --local, scripts/build falls back to named docker volumes mounted at the
-# same in-container paths so this stays portable.
-SSTATE_DIR ?= "/yocto/sstate"
+# Caches on the build machine, mounted into the container at the same
+# path. /yocto is host-owned by the build machine; on a Mac running
+# --local, scripts/build falls back to named docker volumes mounted at
+# the same in-container paths so this stays portable.
+#
+# SSTATE_DIR is per-MACHINE so each target gets its own cache namespace.
+# Trade-off: native/cross tools rebuild per MACHINE (some duplication);
+# wins are clean per-machine wipe and zero risk of cross-MACHINE state
+# bleed. DL_DIR stays shared (source tarballs are machine-independent).
+SSTATE_DIR ?= "/yocto/sstate/${MACHINE}"
 DL_DIR     ?= "/yocto/downloads"
 
 # Accept NXP/Vivante proprietary licenses (required for imx-gpu-viv)
