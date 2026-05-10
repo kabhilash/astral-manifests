@@ -12,12 +12,12 @@
 -->
 <manifest>
 
-  <remote name="yocto"   fetch="https://git.yoctoproject.org/"/>
-  <remote name="oe"      fetch="https://git.openembedded.org/"/>
-  <remote name="varigit" fetch="https://github.com/varigit/"/>
-  <remote name="qt"      fetch="https://code.qt.io/yocto/"/>
-  <remote name="rauc"    fetch="https://github.com/rauc/"/>
-  <remote name="astra"   fetch="https://github.com/AstraA/"/>
+  <remote name="yocto"     fetch="https://git.yoctoproject.org/"/>
+  <remote name="oe"        fetch="https://git.openembedded.org/"/>
+  <remote name="varigit"   fetch="https://github.com/varigit/"/>
+  <remote name="qt"        fetch="https://code.qt.io/yocto/"/>
+  <remote name="rauc"      fetch="https://github.com/rauc/"/>
+  <remote name="kabhilash" fetch="git@github.com:kabhilash/"/>
 
   <default revision="scarthgap" remote="yocto" sync-j="4"/>
 
@@ -71,10 +71,12 @@
     See https://dev.variscite.com/var-som-mx8m-plus/mx8mp-yocto-scarthgap-6.6.y_2.2.2-v1.2/release-notes/
   -->
 
-  <!-- Astra-owned layers (separate org repos; gitignored from this AstraOS repo) -->
-  <!-- TODO: replace org name "AstraA" with actual org once GitHub org is created -->
-  <project name="meta-astrax"             path="meta-astrax"             remote="astra" revision="main"/>
-  <project name="meta-astrax-raspberrypi" path="meta-astrax-raspberrypi" remote="astra" revision="main"/>
-  <project name="meta-astrax-variscite"   path="meta-astrax-variscite"   remote="astra" revision="main"/>
+  <!-- Astra-owned layers (separate repos under github.com/kabhilash; SSH URLs).
+       The build machine needs an SSH key with read access to each repo (deploy
+       key, account-level key, or org-level key when these eventually move to
+       an Astra org). -->
+  <project name="meta-astrax"             path="meta-astrax"             remote="kabhilash" revision="main"/>
+  <project name="meta-astrax-raspberrypi" path="meta-astrax-raspberrypi" remote="kabhilash" revision="main"/>
+  <project name="meta-astrax-variscite"   path="meta-astrax-variscite"   remote="kabhilash" revision="main"/>
 
 </manifest>
