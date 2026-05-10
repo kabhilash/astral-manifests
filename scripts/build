@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+# AstraOS build helper.
+#
+# Single dispatcher for rebuilding the devcontainer, building image variants,
+# building the cross-SDK, and bitbake-ing any single recipe. Auto-detects
+# whether it's running on the host or inside the devcontainer; on the host
+# it docker-runs the build inside the container, inside the container it
+# just exec's bitbake directly.
+#
+# Usage:
+#   scripts/build container
+#   scripts/build image       <MACHINE>
+#   scripts/build prod-image
+#   scripts/build sdk         <MACHINE>
+#   scripts/build recipe      <MACHINE> <RECIPE> [TASK]
+#   scripts/build bitbake     <MACHINE> <args...>
+#   scripts/build shell       <MACHINE>
+#
+# MACHINE: raspberrypi5 | raspberrypi-cm5 | imx8mp-var-som | astraos-imx8mp-mcb
+
+set -euo pipefail
+
+ASTRAOS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+IMAGE_TAG="astraos-builder:latest"
+
+usage() {
+    cat <<'EOF'
+AstraOS build helper.
+
+Usage:
+  scripts/build container                              Rebuild the devcontainer image
+  scripts/build image       <MACHINE>                  Build astraos-image-dev for MACHINE
+  scripts/build prod-image                             Build astraos-image (mcb production)
+  scripts/build sdk         <MACHINE>                  Build astraos-sdk for MACHINE
+  scripts/build recipe      <MACHINE> <RECIPE> [TASK]  bitbake [-c TASK] RECIPE
+  scripts/build bitbake     <MACHINE> <args...>        bitbake passthrough
+  scripts/build shell       <MACHINE>                  Interactive shell, env sourced
+
+MACHINE: raspberrypi5 | raspberrypi-cm5 | imx8mp-var-som | astraos-imx8mp-mcb
+EOF
+    exit 1
+}
+
+_in_container() {
+    [ -f /.dockerenv ] || [ -n "${REMOTE_CONTAINERS:-}" ]
+}
+
+_ensure_image() {
+    if ! docker image inspect "${IMAGE_TAG}" >/dev/null 2>&1; then
+        echo ">>> Container image not found; building it first..."
+        _build_container
+    fi
+}
+
+_build_container() {
+    docker build \
+        --build-arg USER_UID="$(id -u 2>/dev/null || echo 1000)" \
+        --build-arg USER_GID="$(id -g 2>/dev/null || echo 1000)" \
+        -t "${IMAGE_TAG}" \
+        "${ASTRAOS_ROOT}/.devcontainer"
+}
+
+# Run a bash command inside the build env. On the host this docker-runs;
+# inside the container it just bash -c's.
+_run() {
+    local cmd="$1"
+    if _in_container; then
+        bash -c "${cmd}"
+    else
+        _ensure_image
+        docker run --rm -it \
+            -v "${ASTRAOS_ROOT}:/workspaces/AstraOS" \
+            -v "astraos-sstate:/workspaces/sstate-cache" \
+            -v "astraos-downloads:/workspaces/downloads" \
+            --shm-size=2g \
+            --security-opt apparmor=unconfined \
+            --security-opt seccomp=unconfined \
+            -w /workspaces/AstraOS \
+            "${IMAGE_TAG}" \
+            bash -lc "${cmd}"
+    fi
+}
+
+# Validate MACHINE is one of the four known targets
+_check_machine() {
+    case "$1" in
+        raspberrypi5|raspberrypi-cm5|imx8mp-var-som|astraos-imx8mp-mcb) ;;
+        *)
+            echo "ERROR: unknown MACHINE '$1'" >&2
+            echo "Valid: raspberrypi5, raspberrypi-cm5, imx8mp-var-som, astraos-imx8mp-mcb" >&2
+            exit 1
+            ;;
+    esac
+}
+
+cmd="${1:-}"
+shift || true
+
+case "${cmd}" in
+    container)
+        _build_container
+        ;;
+
+    image)
+        MACHINE="${1:-}"; [ -z "$MACHINE" ] && usage
+        _check_machine "$MACHINE"
+        _run "source scripts/setup-environment ${MACHINE} && bitbake astraos-image-dev"
+        ;;
+
+    prod-image)
+        _run "source scripts/setup-environment astraos-imx8mp-mcb && bitbake astraos-image"
+        ;;
+
+    sdk)
+        MACHINE="${1:-}"; [ -z "$MACHINE" ] && usage
+        _check_machine "$MACHINE"
+        _run "source scripts/setup-environment ${MACHINE} && bitbake astraos-sdk"
+        ;;
+
+    recipe)
+        MACHINE="${1:-}"; RECIPE="${2:-}"; TASK="${3:-}"
+        { [ -z "$MACHINE" ] || [ -z "$RECIPE" ]; } && usage
+        _check_machine "$MACHINE"
+        if [ -n "$TASK" ]; then
+            _run "source scripts/setup-environment ${MACHINE} && bitbake -c ${TASK} ${RECIPE}"
+        else
+            _run "source scripts/setup-environment ${MACHINE} && bitbake ${RECIPE}"
+        fi
+        ;;
+
+    bitbake)
+        MACHINE="${1:-}"; [ -z "$MACHINE" ] && usage
+        shift
+        _check_machine "$MACHINE"
+        _run "source scripts/setup-environment ${MACHINE} && bitbake $*"
+        ;;
+
+    shell)
+        MACHINE="${1:-}"; [ -z "$MACHINE" ] && usage
+        _check_machine "$MACHINE"
+        _run "source scripts/setup-environment ${MACHINE} && exec bash"
+        ;;
+
+    ""|-h|--help|help)
+        usage
+        ;;
+
+    *)
+        echo "ERROR: unknown subcommand '${cmd}'" >&2
+        usage
+        ;;
+esac
