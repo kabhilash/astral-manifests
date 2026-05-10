@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# AstraOS build environment setup.
+#
+# Usage:    source scripts/setup-environment <MACHINE> [<build-dir>]
+#
+# MACHINE may be:
+#   raspberrypi5            (RPi 5 dev)
+#   raspberrypi-cm5         (RPi CM5 dev)
+#   imx8mp-var-som          (Variscite Symphony v1.7 dev - until mcb arrives)
+#   astraos-imx8mp-mcb      (production, mcb carrier - hardware pending)
+#
+# After sourcing, you'll be in <build-dir>/ with bblayers.conf, local.conf,
+# and the standard poky build env loaded (bitbake on PATH, etc.).
+
+set -e
+
+if [ -z "${BASH_SOURCE[0]}" ]; then
+    echo "ERROR: setup-environment must be sourced (not executed)." >&2
+    exit 1
+fi
+
+# Resolve the AstraOS workspace root (parent of scripts/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ASTRAOS_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+SOURCES_DIR="${ASTRAOS_ROOT}/sources"
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: source scripts/setup-environment <MACHINE> [<build-dir>]" >&2
+    return 1
+fi
+
+MACHINE="$1"
+BUILD_DIR="${2:-build-${MACHINE}}"
+BUILD_PATH="${ASTRAOS_ROOT}/${BUILD_DIR}"
+
+# Per-MACHINE BBLAYERS extensions
+case "$MACHINE" in
+    raspberrypi5|raspberrypi-cm5)
+        MACHINE_LAYERS="  ${SOURCES_DIR}/meta-raspberrypi \\
+  ${ASTRAOS_ROOT}/meta-astrax-raspberrypi \\
+"
+        ;;
+    imx8mp-var-som|astraos-imx8mp-mcb)
+        # TODO: add meta-imx + meta-freescale + meta-arm layer paths once those
+        # are pinned in the manifest (see manifests/default.xml TODO).
+        MACHINE_LAYERS="  ${SOURCES_DIR}/meta-variscite-bsp-common \\
+  ${SOURCES_DIR}/meta-variscite-bsp-imx \\
+  ${SOURCES_DIR}/meta-variscite-sdk-common \\
+  ${SOURCES_DIR}/meta-variscite-sdk-imx \\
+  ${ASTRAOS_ROOT}/meta-astrax-variscite \\
+"
+        ;;
+    *)
+        echo "ERROR: unknown MACHINE '${MACHINE}'" >&2
+        echo "Valid: raspberrypi5, raspberrypi-cm5, imx8mp-var-som, astraos-imx8mp-mcb" >&2
+        return 1
+        ;;
+esac
+
+# Initialize the build dir using poky's helper (sets PATH, exports BB_ENV_*, etc.)
+if [ ! -d "${SOURCES_DIR}/poky" ]; then
+    echo "ERROR: ${SOURCES_DIR}/poky not found - run 'repo init && repo sync' first" >&2
+    return 1
+fi
+
+# shellcheck disable=SC1091
+source "${SOURCES_DIR}/poky/oe-init-build-env" "${BUILD_PATH}" >/dev/null
+
+# Generate bblayers.conf from template
+sed -e "s|@SOURCES@|${SOURCES_DIR}|g" \
+    -e "s|@TOPDIR@|${ASTRAOS_ROOT}|g" \
+    -e "s|@MACHINE_LAYERS@|${MACHINE_LAYERS}|g" \
+    "${ASTRAOS_ROOT}/conf/bblayers.conf.in" > "${BUILD_PATH}/conf/bblayers.conf"
+
+# Generate local.conf from template (only on first init - preserve user edits)
+if [ ! -f "${BUILD_PATH}/conf/local.conf.astraos-generated" ]; then
+    sed -e "s|@MACHINE@|${MACHINE}|g" \
+        "${ASTRAOS_ROOT}/conf/local.conf.in" > "${BUILD_PATH}/conf/local.conf"
+    touch "${BUILD_PATH}/conf/local.conf.astraos-generated"
+fi
+
+echo ""
+echo "AstraOS build env ready."
+echo "  MACHINE   = ${MACHINE}"
+echo "  BUILD_DIR = ${BUILD_PATH}"
+echo ""
+echo "Next:"
+echo "  bitbake astraos-image-dev      # dev variant"
+echo "  bitbake astraos-image          # production (only on astraos-imx8mp-mcb)"
+echo ""

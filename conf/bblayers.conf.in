@@ -1,0 +1,25 @@
+# bblayers.conf template for AstraOS.
+# Processed by scripts/setup-environment - placeholders are substituted at build-dir
+# init time. Do not edit the generated build-<MACHINE>/conf/bblayers.conf directly;
+# regenerate by re-sourcing setup-environment.
+
+POKY_BBLAYERS_CONF_VERSION = "2"
+
+BBPATH = "${TOPDIR}"
+BBFILES ?= ""
+
+BBLAYERS = " \
+  @SOURCES@/poky/meta \
+  @SOURCES@/poky/meta-poky \
+  @SOURCES@/poky/meta-yocto-bsp \
+  @SOURCES@/meta-openembedded/meta-oe \
+  @SOURCES@/meta-openembedded/meta-python \
+  @SOURCES@/meta-openembedded/meta-networking \
+  @SOURCES@/meta-openembedded/meta-multimedia \
+  @SOURCES@/meta-openembedded/meta-filesystems \
+  @SOURCES@/meta-qt6 \
+  @SOURCES@/meta-lts-mixins \
+  @SOURCES@/meta-rauc \
+  @TOPDIR@/meta-astrax \
+@MACHINE_LAYERS@\
+"

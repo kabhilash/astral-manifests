@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AstraOS google-repo manifest.
+
+  Pulls every layer needed to build either dev (raspberrypi5/-cm5/imx8mp-var-som)
+  or production (astraos-imx8mp-mcb) image variants. The MACHINE-specific layer
+  selection happens in conf/bblayers.conf.in via scripts/setup-environment.
+
+  TODO: SHAs marked with revision="scarthgap" should be pinned to specific
+  commits before production use. Variscite-controlled SHAs are already pinned
+  to the L6.6.52_2.2.2 release (var01-2.2.2-v1.2).
+-->
+<manifest>
+
+  <remote name="yocto"   fetch="https://git.yoctoproject.org/"/>
+  <remote name="oe"      fetch="https://git.openembedded.org/"/>
+  <remote name="varigit" fetch="https://github.com/varigit/"/>
+  <remote name="qt"      fetch="https://code.qt.io/yocto/"/>
+  <remote name="rauc"    fetch="https://github.com/rauc/"/>
+  <remote name="astra"   fetch="https://github.com/AstraA/"/>
+
+  <default revision="scarthgap" remote="yocto" sync-j="4"/>
+
+  <!-- Yocto core -->
+  <project name="poky" path="sources/poky" remote="yocto" revision="scarthgap"/>
+
+  <!-- OpenEmbedded -->
+  <project name="meta-openembedded" path="sources/meta-openembedded" remote="oe" revision="scarthgap"/>
+
+  <!-- Raspberry Pi BSP -->
+  <project name="meta-raspberrypi" path="sources/meta-raspberrypi" remote="yocto" revision="scarthgap"/>
+
+  <!-- Qt 6 (need a SHA that ships Qt 6.8.3 - default Scarthgap branch may track 6.6.x) -->
+  <!-- TODO: pin to a SHA on the scarthgap branch that includes Qt 6.8.3, or override SRCREV in bbappend -->
+  <project name="meta-qt6" path="sources/meta-qt6" remote="qt" revision="scarthgap"/>
+
+  <!-- Latest Rust on Scarthgap via LTS mixin -->
+  <!-- TODO: pin SHA -->
+  <project name="meta-lts-mixins" path="sources/meta-lts-mixins" remote="yocto" revision="scarthgap/rust"/>
+
+  <!-- RAUC update framework -->
+  <!-- TODO: pin SHA -->
+  <project name="meta-rauc" path="sources/meta-rauc" remote="rauc" revision="scarthgap"/>
+
+  <!-- Variscite BSP - pinned to NXP L6.6.52_2.2.2 / var01-2.2.2-v1.2 -->
+  <project name="uboot-imx" path="sources/uboot-imx" remote="varigit"
+           revision="e40cef8af71ab3dc056ea2886c840478913e257a"
+           upstream="lf_v2024.04_6.6.52-2.2.2_var01"/>
+  <project name="linux-imx" path="sources/linux-imx" remote="varigit"
+           revision="15f81fa2119ec81e16a924f8ef3e1242563764da"
+           upstream="6.6-2.2.x-imx_var01"/>
+  <project name="meta-variscite-bsp-imx" path="sources/meta-variscite-bsp-imx" remote="varigit"
+           revision="936851de1717d11e0ae04206297913b0a902391b"
+           upstream="scarthgap_6.6.52-2.2.2_var01"/>
+  <project name="meta-variscite-bsp-common" path="sources/meta-variscite-bsp-common" remote="varigit"
+           revision="2a7c846763ef3a3686a6bd3125e9bb436d8fab2c"
+           upstream="scarthgap_6.6.52-2.2.2_var01"/>
+  <project name="meta-variscite-sdk-imx" path="sources/meta-variscite-sdk-imx" remote="varigit"
+           revision="d5b8caaca1268e832751b1cccb8d033f9322d2a0"
+           upstream="scarthgap_6.6.52-2.2.2_var01"/>
+  <project name="meta-variscite-sdk-common" path="sources/meta-variscite-sdk-common" remote="varigit"
+           revision="d0456b2da650709cab235632928502fb65f03887"
+           upstream="scarthgap_6.6.52-2.2.2_var01"/>
+
+  <!--
+    TODO: meta-variscite-bsp-imx transitively depends on the NXP i.MX BSP stack:
+      - meta-imx (NXP-controlled, github.com/nxp-imx/meta-imx)
+      - meta-freescale, meta-freescale-3rdparty, meta-freescale-distro (yocto)
+      - meta-arm, meta-arm-toolchain (yocto)
+    Pin these from Variscite's official manifest before first Variscite build.
+    See https://dev.variscite.com/var-som-mx8m-plus/mx8mp-yocto-scarthgap-6.6.y_2.2.2-v1.2/release-notes/
+  -->
+
+  <!-- Astra-owned layers (separate org repos; gitignored from this AstraOS repo) -->
+  <!-- TODO: replace org name "AstraA" with actual org once GitHub org is created -->
+  <project name="meta-astrax"             path="meta-astrax"             remote="astra" revision="main"/>
+  <project name="meta-astrax-raspberrypi" path="meta-astrax-raspberrypi" remote="astra" revision="main"/>
+  <project name="meta-astrax-variscite"   path="meta-astrax-variscite"   remote="astra" revision="main"/>
+
+</manifest>

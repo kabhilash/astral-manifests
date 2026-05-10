@@ -1,0 +1,37 @@
+# local.conf template for AstraOS. @MACHINE@ is substituted by scripts/setup-environment.
+# Distro-wide settings live in meta-astrax/conf/distro/astraos.conf.
+
+MACHINE ??= "@MACHINE@"
+DISTRO ?= "astraos"
+
+# Build-time package format only - no runtime package manager (see distro/astraos.conf)
+PACKAGE_CLASSES ?= "package_ipk"
+
+# Default features for the active build dir; image recipes override
+EXTRA_IMAGE_FEATURES ?= "read-only-rootfs"
+
+USER_CLASSES ?= "buildstats"
+PATCHRESOLVE = "noop"
+
+BB_DISKMON_DIRS ??= "\
+    STOPTASKS,${TMPDIR},1G,100K \
+    STOPTASKS,${DL_DIR},1G,100K \
+    STOPTASKS,${SSTATE_DIR},1G,100K \
+    STOPTASKS,/tmp,100M,100K \
+    HALT,${TMPDIR},100M,1K \
+    HALT,${DL_DIR},100M,1K \
+    HALT,${SSTATE_DIR},100M,1K \
+    HALT,/tmp,10M,1K"
+
+CONF_VERSION = "2"
+
+# Reproducible builds (see docs/ARCHITECTURE.md - Compliance section)
+BB_HASHSERVE = "auto"
+BB_SIGNATURE_HANDLER = "OEEquivHash"
+
+# Shared caches across build dirs - relative to AstraOS workspace root
+SSTATE_DIR ?= "${TOPDIR}/../sstate-cache"
+DL_DIR     ?= "${TOPDIR}/../downloads"
+
+# Accept NXP/Vivante proprietary licenses (required for imx-gpu-viv)
+LICENSE_FLAGS_ACCEPTED = "commercial Freescale-EULA"
