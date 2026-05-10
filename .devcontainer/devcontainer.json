@@ -27,8 +27,9 @@
     "postCreateCommand": "sudo chown builder:builder /workspaces/sstate-cache /workspaces/downloads && git config --global --add safe.directory '*'",
 
     // runArgs:
-    //   --shm-size=2g           : some Qt6 / WebKit recipes need more than
-    //                             Docker's 64 MB default
+    //   --shm-size=2g           : default 64 MB is too small for some Qt6
+    //                             cross-compile steps. (We do NOT build
+    //                             qtwebengine/qtwebkit - lean SDK goal.)
     //   --security-opt apparmor=unconfined
     //                           : Ubuntu 24.04 hosts default to
     //                             kernel.apparmor_restrict_unprivileged_userns=1
