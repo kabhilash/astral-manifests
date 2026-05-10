@@ -41,6 +41,9 @@ BUILDER_USER="${ASTRAOS_BUILDER_USER:-akothapalli}"
 BUILDER_PORT="${ASTRAOS_BUILDER_PORT:-22}"
 BUILDER_PATH="${ASTRAOS_BUILDER_PATH:-/yocto/astraos}"
 
+# Canonical source of truth: GitHub.
+ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL:-git@github.com:kabhilash/astral-manifests.git}"
+
 MODE=""    # auto by default; set by --local / --remote
 
 usage() {
@@ -177,17 +180,18 @@ if [ "${1:-}" = "clean" ]; then
         echo "ERROR: 'clean' targets the build machine; remove --local" >&2
         exit 1
     fi
-    echo ">>> wiping /yocto/astraos on ${BUILDER_USER}@${BUILDER_HOST} and re-bootstrapping"
-    echo ">>> /yocto/{sstate,downloads,repos} preserved"
-    exec ssh -t -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" 'bash -s' <<'REMOTE_CLEAN'
+    echo ">>> wiping /yocto/astraos on ${BUILDER_USER}@${BUILDER_HOST} and re-bootstrapping from GitHub"
+    echo ">>> /yocto/{sstate,downloads} preserved"
+    exec ssh -t -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
+        ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL}" 'bash -s' <<'REMOTE_CLEAN'
 set -euo pipefail
 cd /
 rm -rf /yocto/astraos
-git clone /yocto/repos/astraos.git /yocto/astraos
+git clone "${ASTRAOS_GIT_URL}" /yocto/astraos
 cd /yocto/astraos
 echo ">>> HEAD = $(git log --oneline -1)"
 echo ">>> repo init"
-repo init -u file:///yocto/repos/astraos.git -m manifests/default.xml --no-clone-bundle
+repo init -u "${ASTRAOS_GIT_URL}" -m manifests/default.xml --no-clone-bundle
 echo ">>> repo sync"
 repo sync -j16 --no-clone-bundle
 echo ">>> sources/:"
@@ -195,14 +199,26 @@ ls /yocto/astraos/sources/ | sort
 REMOTE_CLEAN
 fi
 
-# Remote dispatch: SSH to builder and re-invoke ourselves with --local.
-# Args are passed as a single quoted string; spaces in args are preserved
-# by `printf '%q '` quoting before sending.
+# Remote dispatch: SSH to builder, sync workspace from GitHub, then
+# re-invoke ourselves with --local. The sync makes sure the build runs
+# against whatever the user just `git push origin`-ed.
+#
+# 'container' skips the sync (it doesn't depend on a fresh workspace and
+# building a container is itself a setup step you might run before the
+# workspace exists).
 if [ "${MODE}" = "remote" ]; then
     quoted_args=$(printf '%q ' "$@")
     echo ">>> Dispatching to ${BUILDER_USER}@${BUILDER_HOST}:${BUILDER_PATH}"
+    case "${1:-}" in
+        container)
+            sync_step=""
+            ;;
+        *)
+            sync_step="git -C ${BUILDER_PATH} pull --ff-only && (cd ${BUILDER_PATH} && repo sync -j16 --no-clone-bundle) &&"
+            ;;
+    esac
     exec ssh -t -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
-        "cd ${BUILDER_PATH} && ./scripts/build --local ${quoted_args}"
+        "${sync_step} cd ${BUILDER_PATH} && ./scripts/build --local ${quoted_args}"
 fi
 
 cmd="${1:-}"
