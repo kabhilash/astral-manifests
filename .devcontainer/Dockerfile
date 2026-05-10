@@ -72,10 +72,10 @@ RUN userdel -r ubuntu 2>/dev/null || true \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
 USER ${USERNAME}
-WORKDIR /workspaces/AstraOS
+WORKDIR /yocto/astraos
 
-# Helpful shell history persistence + bash-completion in /workspaces/.bashhist
-RUN echo 'export HISTFILE=/workspaces/.bash_history' >> ~/.bashrc \
+# Helpful shell history persistence in the workspace
+RUN echo 'export HISTFILE=/yocto/.bash_history' >> ~/.bashrc \
     && echo 'export HISTSIZE=10000 HISTFILESIZE=20000' >> ~/.bashrc
 
 CMD ["/bin/bash"]

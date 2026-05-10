@@ -92,14 +92,37 @@ _run() {
         bash -c "${cmd}"
     else
         _ensure_image
+        # Bind /yocto/sstate and /yocto/downloads from host when they exist
+        # (build machine layout); otherwise use named docker volumes mounted
+        # at the same in-container path. local.conf.in references
+        # /yocto/sstate and /yocto/downloads regardless.
+        local sstate_mount dl_mount
+        if [ -d /yocto/sstate ]; then
+            sstate_mount="-v /yocto/sstate:/yocto/sstate"
+        else
+            sstate_mount="-v astraos-sstate:/yocto/sstate"
+        fi
+        if [ -d /yocto/downloads ]; then
+            dl_mount="-v /yocto/downloads:/yocto/downloads"
+        else
+            dl_mount="-v astraos-downloads:/yocto/downloads"
+        fi
+        # Bind /yocto/astraos as the workspace when running on the builder;
+        # otherwise bind the local checkout dir.
+        local workspace_src
+        if [ -d /yocto/astraos ] && [ "${ASTRAOS_ROOT}" = "/yocto/astraos" ]; then
+            workspace_src=/yocto/astraos
+        else
+            workspace_src="${ASTRAOS_ROOT}"
+        fi
         docker run --rm -it \
-            -v "${ASTRAOS_ROOT}:/workspaces/AstraOS" \
-            -v "astraos-sstate:/workspaces/sstate-cache" \
-            -v "astraos-downloads:/workspaces/downloads" \
+            -v "${workspace_src}:/yocto/astraos" \
+            ${sstate_mount} \
+            ${dl_mount} \
             --shm-size=2g \
             --security-opt apparmor=unconfined \
             --security-opt seccomp=unconfined \
-            -w /workspaces/AstraOS \
+            -w /yocto/astraos \
             "${IMAGE_TAG}" \
             bash -lc "${cmd}"
     fi

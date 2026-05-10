@@ -8,16 +8,16 @@
         }
     },
 
-    "workspaceFolder": "/workspaces/AstraOS",
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/AstraOS,type=bind,consistency=cached",
+    "workspaceFolder": "/yocto/astraos",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/yocto/astraos,type=bind,consistency=cached",
 
-    // sstate-cache and downloads in named volumes so they survive container
-    // rebuilds and aren't bloating the bind-mounted host workspace. The
-    // local.conf.in template points SSTATE_DIR / DL_DIR at ${TOPDIR}/../
-    // which resolves to /workspaces - which is where these volumes mount.
+    // sstate-cache and downloads at /yocto/sstate and /yocto/downloads
+    // (matching local.conf.in). On the build machine these are bind mounts
+    // to host paths; in a VS Code devcontainer on a Mac these are named
+    // volumes that survive container rebuilds.
     "mounts": [
-        "source=astraos-sstate,target=/workspaces/sstate-cache,type=volume",
-        "source=astraos-downloads,target=/workspaces/downloads,type=volume"
+        "source=astraos-sstate,target=/yocto/sstate,type=volume",
+        "source=astraos-downloads,target=/yocto/downloads,type=volume"
     ],
 
     "remoteUser": "builder",
@@ -62,8 +62,8 @@
                 "files.watcherExclude": {
                     "**/build-*/**": true,
                     "**/sources/**": true,
-                    "**/sstate-cache/**": true,
-                    "**/downloads/**": true
+                    "/yocto/sstate/**": true,
+                    "/yocto/downloads/**": true
                 }
             }
         }

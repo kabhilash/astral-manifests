@@ -29,9 +29,12 @@ CONF_VERSION = "2"
 BB_HASHSERVE = "auto"
 BB_SIGNATURE_HANDLER = "OEEquivHash"
 
-# Shared caches across build dirs - relative to AstraOS workspace root
-SSTATE_DIR ?= "${TOPDIR}/../sstate-cache"
-DL_DIR     ?= "${TOPDIR}/../downloads"
+# Shared caches on the build machine, mounted into the container at the
+# same path. /yocto is host-owned by the build machine; on a Mac running
+# --local, scripts/build falls back to named docker volumes mounted at the
+# same in-container paths so this stays portable.
+SSTATE_DIR ?= "/yocto/sstate"
+DL_DIR     ?= "/yocto/downloads"
 
 # Accept NXP/Vivante proprietary licenses (required for imx-gpu-viv)
 LICENSE_FLAGS_ACCEPTED = "commercial Freescale-EULA"
