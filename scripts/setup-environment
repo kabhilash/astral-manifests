@@ -69,13 +69,19 @@ source "${SOURCES_DIR}/poky/oe-init-build-env" "${BUILD_PATH}" >/dev/null
 # Always regenerate bblayers.conf and local.conf on every source so that
 # switching MACHINE works in the single shared build/ dir. sstate-cache
 # makes the rebuild after a MACHINE switch fast (mostly cache hits).
-sed -e "s|@SOURCES@|${SOURCES_DIR}|g" \
-    -e "s|@TOPDIR@|${ASTRAOS_ROOT}|g" \
-    -e "s|@MACHINE_LAYERS@|${MACHINE_LAYERS}|g" \
-    "${ASTRAOS_ROOT}/conf/bblayers.conf.in" > "${BUILD_PATH}/conf/bblayers.conf"
+#
+# Use bash builtin substring replacement instead of sed - sed's
+# replacement-string parser collapses multi-line values (MACHINE_LAYERS
+# has newlines) onto a single line, breaking BBLAYERS parsing.
+bblayers="$(<"${ASTRAOS_ROOT}/conf/bblayers.conf.in")"
+bblayers="${bblayers//@SOURCES@/${SOURCES_DIR}}"
+bblayers="${bblayers//@TOPDIR@/${ASTRAOS_ROOT}}"
+bblayers="${bblayers//@MACHINE_LAYERS@/${MACHINE_LAYERS}}"
+printf '%s' "${bblayers}" > "${BUILD_PATH}/conf/bblayers.conf"
 
-sed -e "s|@MACHINE@|${MACHINE}|g" \
-    "${ASTRAOS_ROOT}/conf/local.conf.in" > "${BUILD_PATH}/conf/local.conf"
+local_conf="$(<"${ASTRAOS_ROOT}/conf/local.conf.in")"
+local_conf="${local_conf//@MACHINE@/${MACHINE}}"
+printf '%s' "${local_conf}" > "${BUILD_PATH}/conf/local.conf"
 
 echo ""
 echo "AstraOS build env ready."
