@@ -42,7 +42,7 @@ BUILDER_PORT="${ASTRAOS_BUILDER_PORT:-22}"
 BUILDER_PATH="${ASTRAOS_BUILDER_PATH:-/yocto/astraos}"
 
 # Canonical source of truth: GitHub.
-ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL:-git@github.com:kabhilash/astral-manifests.git}"
+ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL:-git@github.com:kabhilash/astraos-manifests.git}"
 
 MODE=""    # auto by default; set by --local / --remote
 
