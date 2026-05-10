@@ -1,0 +1,53 @@
+{
+    "name": "AstraOS Yocto Build",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "USER_UID": "${localEnv:UID:1000}",
+            "USER_GID": "${localEnv:GID:1000}"
+        }
+    },
+
+    "workspaceFolder": "/workspaces/AstraOS",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/AstraOS,type=bind,consistency=cached",
+
+    // sstate-cache and downloads in named volumes so they survive container
+    // rebuilds and aren't bloating the bind-mounted host workspace. The
+    // local.conf.in template points SSTATE_DIR / DL_DIR at ${TOPDIR}/../
+    // which resolves to /workspaces - which is where these volumes mount.
+    "mounts": [
+        "source=astraos-sstate,target=/workspaces/sstate-cache,type=volume",
+        "source=astraos-downloads,target=/workspaces/downloads,type=volume"
+    ],
+
+    "remoteUser": "builder",
+    "containerUser": "builder",
+
+    // Yocto and bind-mount safety
+    "postCreateCommand": "sudo chown builder:builder /workspaces/sstate-cache /workspaces/downloads && git config --global --add safe.directory '*'",
+
+    // Resource hints for the host (Docker Desktop / Docker Engine)
+    "runArgs": [
+        "--shm-size=2g"
+    ],
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "yocto-project.yocto-bitbake",
+                "ms-azuretools.vscode-docker",
+                "ms-python.python",
+                "redhat.vscode-yaml"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "files.watcherExclude": {
+                    "**/build-*/**": true,
+                    "**/sources/**": true,
+                    "**/sstate-cache/**": true,
+                    "**/downloads/**": true
+                }
+            }
+        }
+    }
+}
