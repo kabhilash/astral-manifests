@@ -34,6 +34,7 @@
 set -euo pipefail
 
 ASTRAOS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+INVOCATION_PWD="${PWD}"   # captured before any later cd; used by 'download'
 IMAGE_TAG="astraos-builder:latest"
 
 BUILDER_HOST="${ASTRAOS_BUILDER_HOST:-10.11.12.20}"
@@ -215,7 +216,10 @@ if [ "${1:-}" = "download" ]; then
         exit 1
     fi
     MACHINE="${1:-}"
-    DEST="${2:-.}"
+    # Default dest = the dir the user ran scripts/build from (captured at
+    # script start as INVOCATION_PWD). Lets you run the command from any
+    # directory and have the wic land right there.
+    DEST="${2:-${INVOCATION_PWD}}"
     if [ -z "${MACHINE}" ]; then
         echo "Usage: scripts/build download <MACHINE> [<dest-dir>]" >&2
         exit 1
