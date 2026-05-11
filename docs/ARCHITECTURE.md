@@ -56,11 +56,15 @@ adding anything to `IMAGE_INSTALL`, `TOOLCHAIN_TARGET_TASK`, or
 | Variscite BSP | NXP L6.6.52_2.2.2 (`mx8mp-yocto-scarthgap-6.6.y_2.2.2-v1.2`) |
 | DISTRO | `astraos` defined in `meta-astrax/conf/distro/astraos.conf` |
 | Init system | systemd |
-| Package format | `package_ipk` build-time only; no runtime package manager |
+| Package format | `package_rpm`; runtime `dnf`/`rpm` in dev image only |
 
-`PACKAGE_CLASSES = "package_ipk"` and `IMAGE_FEATURES` does **not** include
-`package-management`. Runtime image has zero `dnf`/`opkg`/`apt` binaries —
-all installation/update goes through RAUC.
+`PACKAGE_CLASSES = "package_rpm"` distro-wide. The **dev image** includes
+`package-management` in `IMAGE_FEATURES`, so engineers can iterate against
+a running device with `dnf install <pkg>` / `dnf upgrade` pointed at the
+build machine's `deploy/rpm/` tree. The **production image**
+deliberately omits `package-management`: zero `dnf`/`rpm` binaries in
+the runtime image, all installation/update goes through RAUC bundle
+swaps.
 
 ## Layer Responsibility
 
