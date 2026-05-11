@@ -4,8 +4,10 @@
 MACHINE ??= "@MACHINE@"
 DISTRO ?= "astraos"
 
-# Build-time package format only - no runtime package manager (see distro/astraos.conf)
-PACKAGE_CLASSES ?= "package_ipk"
+# PACKAGE_CLASSES is set in meta-astrax/conf/distro/astraos.conf - don't
+# shadow it here. (Earlier this file hard-set package_ipk, which masked
+# the distro's recent switch to package_rpm and produced an image with
+# 7157 ipk files but no rpms or dnf metadata.)
 
 # Default features for the active build dir; image recipes override
 EXTRA_IMAGE_FEATURES ?= "read-only-rootfs"
