@@ -18,6 +18,10 @@
   <remote name="qt"        fetch="https://code.qt.io/yocto/"/>
   <remote name="rauc"      fetch="https://github.com/rauc/"/>
   <remote name="kabhilash" fetch="https://github.com/kabhilash/"/>
+  <!-- NXP i.MX BSP stack -->
+  <remote name="nxp-imx"   fetch="https://github.com/nxp-imx/"/>
+  <remote name="freescale" fetch="https://github.com/Freescale/"/>
+  <remote name="kraj"      fetch="https://github.com/kraj/"/>
 
   <default revision="scarthgap" remote="yocto" sync-j="4"/>
 
@@ -43,33 +47,57 @@
   <!-- TODO: pin SHA -->
   <project name="meta-rauc" path="sources/meta-rauc" remote="rauc" revision="scarthgap"/>
 
-  <!-- Variscite BSP layers - pinned to NXP L6.6.52_2.2.2 / var01-2.2.2-v1.2.
-       The kernel (varigit/linux-imx) and U-Boot (varigit/uboot-imx) source
-       trees are fetched by the BSP recipes themselves via SRC_URI at build
-       time; they don't belong in the manifest (would just duplicate ~1.8 GB
-       of source on disk and slow `repo sync`). The recipes that pin those
-       SRCREVs live inside meta-variscite-bsp-imx. -->
-  <project name="meta-variscite-bsp-imx" path="sources/meta-variscite-bsp-imx" remote="varigit"
-           revision="936851de1717d11e0ae04206297913b0a902391b"
-           upstream="scarthgap_6.6.52-2.2.2_var01"/>
+  <!-- Variscite BSP layers + the NXP i.MX BSP stack they sit on top of.
+       SHAs are taken verbatim from Variscite's reference manifest for
+       the L6.6.52-2.2.2 release:
+         varigit/variscite-bsp-platform @ scarthgap/imx-6.6.52-2.2.2.xml
+       The kernel (varigit/linux-imx) and U-Boot (varigit/uboot-imx)
+       source trees are fetched by the BSP recipes themselves via
+       SRC_URI at build time; they're not separate manifest projects.
+
+       NXP-side stack (provides the fsl-bsp-release collection,
+       toolchain bits, Freescale BSP, virt support). -->
+  <project name="meta-arm" path="sources/meta-arm" remote="yocto"
+           revision="a81c19915b5b9e71ed394032e9a50fd06919e1cd"
+           upstream="scarthgap"/>
+  <project name="meta-freescale" path="sources/meta-freescale" remote="freescale"
+           revision="0c27c21cab57876474bb572e5d378b6707e41224"
+           upstream="scarthgap"/>
+  <project name="meta-freescale-3rdparty" path="sources/meta-freescale-3rdparty" remote="freescale"
+           revision="ce10c065119c2d4e359235c77aae7e0d843533ef"
+           upstream="scarthgap"/>
+  <project name="meta-freescale-distro" path="sources/meta-freescale-distro" remote="freescale"
+           revision="b9d6a5d9931922558046d230c1f5f4ef6ee72345"
+           upstream="scarthgap"/>
+  <project name="meta-virtualization" path="sources/meta-virtualization" remote="yocto"
+           revision="8409bc0c8b9209327add72d8fa72571cdeb5521e"
+           upstream="scarthgap"/>
+  <project name="meta-clang" path="sources/meta-clang" remote="kraj"
+           revision="5c602337ea1a80fb7217eeda04e396cf90587dca"
+           upstream="scarthgap"/>
+  <project name="meta-imx" path="sources/meta-imx" remote="nxp-imx"
+           revision="refs/tags/rel_imx_6.6.52_2.2.2"
+           upstream="scarthgap-6.6.52-2.2.2"/>
+
+  <!-- Variscite layers (pinned to scarthgap_6.6.52-2.2.2_var01). -->
   <project name="meta-variscite-bsp-common" path="sources/meta-variscite-bsp-common" remote="varigit"
            revision="2a7c846763ef3a3686a6bd3125e9bb436d8fab2c"
            upstream="scarthgap_6.6.52-2.2.2_var01"/>
-  <project name="meta-variscite-sdk-imx" path="sources/meta-variscite-sdk-imx" remote="varigit"
-           revision="d5b8caaca1268e832751b1cccb8d033f9322d2a0"
+  <project name="meta-variscite-bsp-imx" path="sources/meta-variscite-bsp-imx" remote="varigit"
+           revision="243bdb397a01766c1c0ef13793a8e2cdb74df976"
            upstream="scarthgap_6.6.52-2.2.2_var01"/>
   <project name="meta-variscite-sdk-common" path="sources/meta-variscite-sdk-common" remote="varigit"
-           revision="d0456b2da650709cab235632928502fb65f03887"
+           revision="7b45393620f4496b4dfac1b5a71245377a8ccbde"
            upstream="scarthgap_6.6.52-2.2.2_var01"/>
-
-  <!--
-    TODO: meta-variscite-bsp-imx transitively depends on the NXP i.MX BSP stack:
-      - meta-imx (NXP-controlled, github.com/nxp-imx/meta-imx)
-      - meta-freescale, meta-freescale-3rdparty, meta-freescale-distro (yocto)
-      - meta-arm, meta-arm-toolchain (yocto)
-    Pin these from Variscite's official manifest before first Variscite build.
-    See https://dev.variscite.com/var-som-mx8m-plus/mx8mp-yocto-scarthgap-6.6.y_2.2.2-v1.2/release-notes/
-  -->
+  <project name="meta-variscite-sdk-imx" path="sources/meta-variscite-sdk-imx" remote="varigit"
+           revision="85fd9db8392b706c6bd9a842a02d80c7aeffc39f"
+           upstream="scarthgap_6.6.52-2.2.2_var01"/>
+  <!-- meta-variscite-hab provides HABv4 signing for production builds
+       (astraos-imx8mp-mcb). Synced unconditionally, wired into BBLAYERS
+       only by setup-environment when building production. -->
+  <project name="meta-variscite-hab" path="sources/meta-variscite-hab" remote="varigit"
+           revision="e9ba2f5099939df9bcbdf540192f21ecbea3de08"
+           upstream="scarthgap_6.6.52-2.2.2_var01"/>
 
   <!-- Astra-owned layers (separate repos under github.com/kabhilash; SSH URLs).
        The build machine needs an SSH key with read access to each repo (deploy

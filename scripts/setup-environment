@@ -60,14 +60,28 @@ case "$MACHINE" in
 "
         ;;
     imx8mp-var-som|astraos-imx8mp-mcb)
-        # TODO: add meta-imx + meta-freescale + meta-arm layer paths once those
-        # are pinned in the manifest (see manifests/default.xml TODO).
-        MACHINE_LAYERS="  ${SOURCES_DIR}/meta-variscite-bsp-common \\
+        # NXP i.MX BSP stack must be listed before the Variscite layers
+        # so the fsl-bsp-release / meta-freescale collections are
+        # discovered first. meta-variscite-hab is BBLAYERS-included only
+        # for the production MACHINE (mcb) where HABv4 signing matters;
+        # imx8mp-var-som (Symphony dev board) skips it.
+        MACHINE_LAYERS="  ${SOURCES_DIR}/meta-arm/meta-arm \\
+  ${SOURCES_DIR}/meta-arm/meta-arm-toolchain \\
+  ${SOURCES_DIR}/meta-clang \\
+  ${SOURCES_DIR}/meta-freescale \\
+  ${SOURCES_DIR}/meta-virtualization \\
+  ${SOURCES_DIR}/meta-imx/meta-imx-bsp \\
+  ${SOURCES_DIR}/meta-imx/meta-imx-sdk \\
+  ${SOURCES_DIR}/meta-variscite-bsp-common \\
   ${SOURCES_DIR}/meta-variscite-bsp-imx \\
   ${SOURCES_DIR}/meta-variscite-sdk-common \\
   ${SOURCES_DIR}/meta-variscite-sdk-imx \\
   ${SOURCES_DIR}/meta-astrax-variscite \\
 "
+        if [ "${MACHINE}" = "astraos-imx8mp-mcb" ]; then
+            MACHINE_LAYERS="${MACHINE_LAYERS}  ${SOURCES_DIR}/meta-variscite-hab \\
+"
+        fi
         ;;
     *)
         echo "ERROR: unknown MACHINE '${MACHINE}'" >&2
