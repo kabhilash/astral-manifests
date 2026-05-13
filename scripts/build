@@ -291,12 +291,16 @@ fi
 if [ "${MODE}" = "remote" ]; then
     quoted_args=$(printf '%q ' "$@")
     echo ">>> Dispatching to ${BUILDER_USER}@${BUILDER_HOST}:${BUILDER_PATH}"
+    # Bootstrap the workspace + cache dirs on the builder when missing.
+    # Idempotent: mkdir -p never errors on existing dirs, and the
+    # clone/repo-sync block only runs when ${BUILDER_PATH}/.git is
+    # absent. This means a brand-new builder (or one where the user
+    # rm-rf'd the workspace) recovers automatically on the next build
+    # command - no separate `clean` call required.
+    bootstrap_step="mkdir -p \"${BUILDER_HOST_ROOT}/sstate\" \"${BUILDER_HOST_ROOT}/downloads\" && if [ ! -d \"${BUILDER_PATH}/.git\" ]; then echo \">>> bootstrapping workspace at ${BUILDER_PATH}\" && git clone \"${ASTRAOS_GIT_URL}\" \"${BUILDER_PATH}\" && cd \"${BUILDER_PATH}\" && repo init -u \"${ASTRAOS_GIT_URL}\" -m manifests/default.xml --no-clone-bundle && repo sync -j16 --no-clone-bundle; fi &&"
     # Always pull AstraOS to pick up Dockerfile / scripts / manifest
     # changes before any subcommand runs. Container previously skipped
-    # this and built against a stale .devcontainer/Dockerfile; the only
-    # legitimate reason to skip would be a chicken-and-egg case where
-    # the workspace doesn't yet exist - but in that case clean is the
-    # right command, not container.
+    # this and built against a stale .devcontainer/Dockerfile.
     #
     # GitHub SSH occasionally drops connections from the build machine.
     # Retry git pull 3x with backoff so a transient blip doesn't kill
@@ -320,7 +324,7 @@ if [ "${MODE}" = "remote" ]; then
         ssh_tty=""
     fi
     exec ssh ${ssh_tty} -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
-        "${sync_step} cd ${BUILDER_PATH} && ./scripts/build --local ${quoted_args}"
+        "${bootstrap_step} ${sync_step} cd ${BUILDER_PATH} && ./scripts/build --local ${quoted_args}"
 fi
 
 cmd="${1:-}"
