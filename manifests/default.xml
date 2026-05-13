@@ -47,6 +47,13 @@
   <!-- TODO: pin SHA -->
   <project name="meta-rauc" path="sources/meta-rauc" remote="rauc" revision="scarthgap"/>
 
+  <!-- meta-security: provides packagegroup-security-tpm2 (meta-tpm sub-layer)
+       used by astraos-image-dev. Pinned to Variscite's v1.2 SHA for
+       known-good compatibility with the NXP/scarthgap stack. -->
+  <project name="meta-security" path="sources/meta-security" remote="yocto"
+           revision="b13f1705d723650de61277670c8a76aadea4cfdd"
+           upstream="scarthgap"/>
+
   <!-- Variscite BSP layers + the NXP i.MX BSP stack they sit on top of.
        SHAs are taken verbatim from Variscite's reference manifest for
        the L6.6.52-2.2.2 release:
