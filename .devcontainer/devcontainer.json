@@ -8,16 +8,17 @@
         }
     },
 
-    "workspaceFolder": "/yocto/astraos",
-    "workspaceMount": "source=${localWorkspaceFolder},target=/yocto/astraos,type=bind,consistency=cached",
+    "workspaceFolder": "/home/akothapalli/yocto/astraos",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/akothapalli/yocto/astraos,type=bind,consistency=cached",
 
-    // sstate-cache and downloads at /yocto/sstate and /yocto/downloads
-    // (matching local.conf.in). On the build machine these are bind mounts
-    // to host paths; in a VS Code devcontainer on a Mac these are named
-    // volumes that survive container rebuilds.
+    // sstate-cache and downloads at /home/akothapalli/yocto/{sstate,downloads}
+    // (matching local.conf.in and the host layout on the AstraOS builder).
+    // On the build machine these are bind mounts to host paths; in a VS Code
+    // devcontainer on a Mac these are named volumes that survive container
+    // rebuilds.
     "mounts": [
-        "source=astraos-sstate,target=/yocto/sstate,type=volume",
-        "source=astraos-downloads,target=/yocto/downloads,type=volume"
+        "source=astraos-sstate,target=/home/akothapalli/yocto/sstate,type=volume",
+        "source=astraos-downloads,target=/home/akothapalli/yocto/downloads,type=volume"
     ],
 
     "remoteUser": "builder",
@@ -62,8 +63,8 @@
                 "files.watcherExclude": {
                     "**/build-*/**": true,
                     "**/sources/**": true,
-                    "/yocto/sstate/**": true,
-                    "/yocto/downloads/**": true
+                    "/home/akothapalli/yocto/sstate/**": true,
+                    "/home/akothapalli/yocto/downloads/**": true
                 }
             }
         }

@@ -125,18 +125,18 @@ _run() {
         # Bind host sstate/downloads from ${BUILDER_HOST_ROOT} when present
         # (build machine layout, NVMe-backed); otherwise use named docker
         # volumes mounted at the same in-container path. local.conf.in
-        # references /yocto/sstate and /yocto/downloads inside the container
-        # regardless of the host source.
+        # references /home/akothapalli/yocto/{sstate,downloads} inside the
+        # container regardless of the host source.
         local sstate_mount dl_mount
         if [ -d "${BUILDER_HOST_ROOT}/sstate" ]; then
-            sstate_mount="-v ${BUILDER_HOST_ROOT}/sstate:/yocto/sstate"
+            sstate_mount="-v ${BUILDER_HOST_ROOT}/sstate:/home/akothapalli/yocto/sstate"
         else
-            sstate_mount="-v astraos-sstate:/yocto/sstate"
+            sstate_mount="-v astraos-sstate:/home/akothapalli/yocto/sstate"
         fi
         if [ -d "${BUILDER_HOST_ROOT}/downloads" ]; then
-            dl_mount="-v ${BUILDER_HOST_ROOT}/downloads:/yocto/downloads"
+            dl_mount="-v ${BUILDER_HOST_ROOT}/downloads:/home/akothapalli/yocto/downloads"
         else
-            dl_mount="-v astraos-downloads:/yocto/downloads"
+            dl_mount="-v astraos-downloads:/home/akothapalli/yocto/downloads"
         fi
         # Bind ${BUILDER_PATH} as the workspace when running on the builder;
         # otherwise bind the local checkout dir.
@@ -163,14 +163,14 @@ _run() {
             docker_tty="-it"
         fi
         docker run --rm ${docker_tty} \
-            -v "${workspace_src}:/yocto/astraos" \
+            -v "${workspace_src}:/home/akothapalli/yocto/astraos" \
             ${sstate_mount} \
             ${dl_mount} \
             ${ssh_mount} \
             --shm-size=2g \
             --security-opt apparmor=unconfined \
             --security-opt seccomp=unconfined \
-            -w /yocto/astraos \
+            -w /home/akothapalli/yocto/astraos \
             "${IMAGE_TAG}" \
             bash -lc "${cmd}"
     fi

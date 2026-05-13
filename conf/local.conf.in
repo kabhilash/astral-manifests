@@ -45,20 +45,20 @@ PARALLEL_MAKE     ?= "-j ${@oe.utils.cpu_count()}"
 BB_HASHSERVE = "auto"
 BB_SIGNATURE_HANDLER = "OEEquivHash"
 
-# Caches on the build machine, mounted into the container at the paths
-# below. On the build machine, scripts/build bind-mounts the host
+# Caches on the build machine, mounted into the container at the same
+# path as on the host (NVMe-backed). scripts/build bind-mounts the host
 # directories `${BUILDER_HOST_ROOT}/{sstate,downloads}` (default
-# `/home/akothapalli/yocto/{sstate,downloads}`, NVMe-backed) onto these
-# in-container paths. On a Mac running --local, scripts/build falls
-# back to named docker volumes mounted at the same in-container paths
-# so this stays portable.
+# `/home/akothapalli/yocto/{sstate,downloads}`) onto these in-container
+# paths. On a Mac running --local, scripts/build falls back to named
+# docker volumes mounted at the same in-container paths so this stays
+# portable.
 #
 # SSTATE_DIR is per-MACHINE so each target gets its own cache namespace.
 # Trade-off: native/cross tools rebuild per MACHINE (some duplication);
 # wins are clean per-machine wipe and zero risk of cross-MACHINE state
 # bleed. DL_DIR stays shared (source tarballs are machine-independent).
-SSTATE_DIR ?= "/yocto/sstate/${MACHINE}"
-DL_DIR     ?= "/yocto/downloads"
+SSTATE_DIR ?= "/home/akothapalli/yocto/sstate/${MACHINE}"
+DL_DIR     ?= "/home/akothapalli/yocto/downloads"
 
 # LICENSE_FLAGS_ACCEPTED is set in meta-astrax/conf/distro/astraos.conf -
 # don't shadow it here. (Earlier this file hard-set the variable, which

@@ -13,8 +13,9 @@ cd /Users/akothapalli/Projects/AstraA/X/AstraOS
 This is **interactive**: the user lands at a bash prompt inside the
 devcontainer (running on the build machine via SSH by default). The
 prompt has BitBake on PATH, `setup-environment <MACHINE>` already
-sourced, and `cwd = /yocto/astraos/build/`. The user types `bitbake
-...` directly, edits files, runs `devtool modify` workflows, etc.
+sourced, and `cwd = /home/akothapalli/yocto/astraos/build-<MACHINE>/`.
+The user types `bitbake ...` directly, edits files, runs
+`devtool modify` workflows, etc.
 Exiting with `Ctrl-D` or `exit` returns control to the user's host
 shell.
 
