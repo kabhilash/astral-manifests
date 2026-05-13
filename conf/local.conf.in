@@ -43,6 +43,19 @@ CONF_VERSION = "2"
 # recipes are simply absent.
 BB_DANGLINGAPPENDS_WARNONLY = "1"
 
+# Freescale/NXP proprietary binary userspace (imx-gpu-viv Vivante driver,
+# imx-vpu-* codec libraries, firmware-imx-*) gates do_unpack on an explicit
+# ACCEPT_FSL_EULA opt-in beyond LICENSE_FLAGS_ACCEPTED. The EULA file is at
+# sources/meta-imx/LICENSE.txt - reviewed and accepted on behalf of AstraOS.
+ACCEPT_FSL_EULA = "1"
+
+# Variscite's var-uuu-installer (USB-boot factory-flashing helper) warns at
+# parse time if VAR_FLASH_IMAGE_NAME is unset and silently defaults to
+# fsl-image-gui-chromium (which we don't build). Point it at the matching
+# AstraOS image so the warning goes away and, if VAR_UUU_INSTALL=true is
+# ever set, the installer wraps the right rootfs.
+VAR_FLASH_IMAGE_NAME = "${@'astraos-image' if d.getVar('ASTRAOS_BUILD_TYPE') == 'prod' else 'astraos-image-dev'}"
+
 # Parallelism: use every core/thread the host offers. The build machine has
 # 96 threads / 1 TB RAM, so memory pressure isn't a concern even at full
 # concurrency. oe.utils.cpu_count() auto-adjusts on smaller hosts (a
