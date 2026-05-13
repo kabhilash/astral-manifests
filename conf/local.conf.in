@@ -1,8 +1,15 @@
-# local.conf template for AstraOS. @MACHINE@ is substituted by scripts/setup-environment.
+# local.conf template for AstraOS. @MACHINE@ and @BUILD_TYPE@ are
+# substituted by scripts/setup-environment.
 # Distro-wide settings live in meta-astrax/conf/distro/astraos.conf.
 
 MACHINE ??= "@MACHINE@"
 DISTRO ?= "astraos"
+
+# Build type: "dev" (default) or "prod". Set by scripts/build prod-image,
+# read by the conditional INHERIT below to scope cve-check to production
+# builds (dev iteration shouldn't pay for a full CVE DB scan).
+ASTRAOS_BUILD_TYPE = "@BUILD_TYPE@"
+INHERIT += "${@'cve-check' if d.getVar('ASTRAOS_BUILD_TYPE') == 'prod' else ''}"
 
 # PACKAGE_CLASSES is set in meta-astrax/conf/distro/astraos.conf - don't
 # shadow it here. (Earlier this file hard-set package_ipk, which masked

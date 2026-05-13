@@ -9,6 +9,10 @@
 #   imx8mp-var-som               (Variscite Symphony v1.7 dev - until mcb arrives)
 #   astraos-imx8mp-mcb           (production, mcb carrier - hardware pending)
 #
+# Env vars consumed:
+#   ASTRAOS_BUILD_TYPE = dev|prod (default dev). When "prod", local.conf
+#     inherits cve-check. scripts/build's prod-image subcommand sets this.
+#
 # After sourcing, you'll be in <build-dir>/ with bblayers.conf, local.conf,
 # and the standard poky build env loaded (bitbake on PATH, etc.).
 
@@ -36,6 +40,17 @@ MACHINE="$1"
 # by MACHINE (see local.conf.in), so the only per-dir cost is conf/ + tmp/.
 BUILD_DIR="${2:-build-${MACHINE}}"
 BUILD_PATH="${ASTRAOS_ROOT}/${BUILD_DIR}"
+
+# dev | prod. Templated into local.conf to gate prod-only INHERITs
+# (cve-check today; potentially signing/dm-verity-related toggles later).
+ASTRAOS_BUILD_TYPE="${ASTRAOS_BUILD_TYPE:-dev}"
+case "${ASTRAOS_BUILD_TYPE}" in
+    dev|prod) ;;
+    *)
+        echo "ERROR: ASTRAOS_BUILD_TYPE='${ASTRAOS_BUILD_TYPE}' (must be 'dev' or 'prod')" >&2
+        return 1
+        ;;
+esac
 
 # Per-MACHINE BBLAYERS extensions
 case "$MACHINE" in
@@ -85,12 +100,14 @@ printf '%s' "${bblayers}" > "${BUILD_PATH}/conf/bblayers.conf"
 
 local_conf="$(<"${ASTRAOS_ROOT}/conf/local.conf.in")"
 local_conf="${local_conf//@MACHINE@/${MACHINE}}"
+local_conf="${local_conf//@BUILD_TYPE@/${ASTRAOS_BUILD_TYPE}}"
 printf '%s' "${local_conf}" > "${BUILD_PATH}/conf/local.conf"
 
 echo ""
 echo "AstraOS build env ready."
-echo "  MACHINE   = ${MACHINE}"
-echo "  BUILD_DIR = ${BUILD_PATH}"
+echo "  MACHINE          = ${MACHINE}"
+echo "  BUILD_DIR        = ${BUILD_PATH}"
+echo "  ASTRAOS_BUILD_TYPE = ${ASTRAOS_BUILD_TYPE}"
 echo ""
 echo "Next:"
 echo "  bitbake astraos-image-dev      # dev variant"
