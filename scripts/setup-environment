@@ -30,7 +30,11 @@ if [ "$#" -lt 1 ]; then
 fi
 
 MACHINE="$1"
-BUILD_DIR="${2:-build}"
+# Default to a per-MACHINE build dir so concurrent / interleaved builds for
+# different targets don't trample each other's tmp/ or trigger OE-core's
+# MACHINE-mismatch sanity error. DL_DIR is shared and SSTATE_DIR is keyed
+# by MACHINE (see local.conf.in), so the only per-dir cost is conf/ + tmp/.
+BUILD_DIR="${2:-build-${MACHINE}}"
 BUILD_PATH="${ASTRAOS_ROOT}/${BUILD_DIR}"
 
 # Per-MACHINE BBLAYERS extensions
@@ -67,8 +71,8 @@ fi
 source "${SOURCES_DIR}/poky/oe-init-build-env" "${BUILD_PATH}" >/dev/null
 
 # Always regenerate bblayers.conf and local.conf on every source so that
-# switching MACHINE works in the single shared build/ dir. sstate-cache
-# makes the rebuild after a MACHINE switch fast (mostly cache hits).
+# bblayers picks up MACHINE_LAYERS changes (e.g. meta-raspberrypi vs.
+# meta-variscite-*) without manual edits.
 #
 # Use bash builtin substring replacement instead of sed - sed's
 # replacement-string parser collapses multi-line values (MACHINE_LAYERS

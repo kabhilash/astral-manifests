@@ -231,7 +231,7 @@ if [ "${1:-}" = "download" ]; then
             exit 1
             ;;
     esac
-    REMOTE_WIC="/yocto/astraos/build/tmp-glibc/deploy/images/${MACHINE}/astraos-image-dev-${MACHINE}.rootfs.wic.zst"
+    REMOTE_WIC="/yocto/astraos/build-${MACHINE}/tmp/deploy/images/${MACHINE}/astraos-image-dev-${MACHINE}.rootfs.wic.zst"
     echo ">>> fetching ${REMOTE_WIC}"
     echo ">>>   from ${BUILDER_USER}@${BUILDER_HOST}"
     echo ">>>   to   ${DEST}/"
