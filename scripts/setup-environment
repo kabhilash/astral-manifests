@@ -4,10 +4,10 @@
 # Usage:    source scripts/setup-environment <MACHINE> [<build-dir>]
 #
 # MACHINE may be:
-#   raspberrypi5            (RPi 5 dev)
-#   raspberrypi-cm5         (RPi CM5 dev)
-#   imx8mp-var-som          (Variscite Symphony v1.7 dev - until mcb arrives)
-#   astraos-imx8mp-mcb      (production, mcb carrier - hardware pending)
+#   raspberrypi5                 (RPi 5 dev)
+#   raspberrypi-cm5-io-board     (RPi CM5 on the official CM5 IO Board, dev)
+#   imx8mp-var-som               (Variscite Symphony v1.7 dev - until mcb arrives)
+#   astraos-imx8mp-mcb           (production, mcb carrier - hardware pending)
 #
 # After sourcing, you'll be in <build-dir>/ with bblayers.conf, local.conf,
 # and the standard poky build env loaded (bitbake on PATH, etc.).
@@ -39,7 +39,7 @@ BUILD_PATH="${ASTRAOS_ROOT}/${BUILD_DIR}"
 
 # Per-MACHINE BBLAYERS extensions
 case "$MACHINE" in
-    raspberrypi5|raspberrypi-cm5)
+    raspberrypi5|raspberrypi-cm5-io-board)
         MACHINE_LAYERS="  ${SOURCES_DIR}/meta-raspberrypi \\
   ${SOURCES_DIR}/meta-astrax-raspberrypi \\
 "
@@ -56,7 +56,7 @@ case "$MACHINE" in
         ;;
     *)
         echo "ERROR: unknown MACHINE '${MACHINE}'" >&2
-        echo "Valid: raspberrypi5, raspberrypi-cm5, imx8mp-var-som, astraos-imx8mp-mcb" >&2
+        echo "Valid: raspberrypi5, raspberrypi-cm5-io-board, imx8mp-var-som, astraos-imx8mp-mcb" >&2
         return 1
         ;;
 esac

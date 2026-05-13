@@ -12,7 +12,7 @@ its repository.
 | Production | NXP i.MX8M Plus | Variscite VAR-SOM-MX8M-Plus on custom carrier `mcb` | `astraos-imx8mp-mcb` | **Hardware pending** — MACHINE spec authored, not yet exercised |
 | Variscite dev | NXP i.MX8M Plus | Variscite VAR-SOM-MX8M-Plus on Variscite Symphony **v1.7** | `imx8mp-var-som` (upstream) | Active — primary Variscite dev target until `mcb` arrives |
 | RPi dev | Broadcom BCM2712 | Raspberry Pi 5 | `raspberrypi5` (upstream) | Active |
-| RPi dev | Broadcom BCM2712 | Raspberry Pi Compute Module 5 | `raspberrypi-cm5` (upstream) | Active |
+| RPi dev | Broadcom BCM2712 | Raspberry Pi Compute Module 5 on the official CM5 IO Board | `raspberrypi-cm5-io-board` (upstream) | Active |
 
 Production is the only target with secure boot fuses blown; dev targets run
 the same source tree unsigned.
@@ -215,7 +215,7 @@ Two image recipes in `meta-astrax/recipes-images/` sharing a base:
   - `gdbserver`, `strace`, `tcpdump`, `perf`, `htop`
   - Root SSH with known dev key
   - journald to console
-  - Targets `raspberrypi5`, `raspberrypi-cm5`, `imx8mp-var-som`
+  - Targets `raspberrypi5`, `raspberrypi-cm5-io-board`, `imx8mp-var-som`
 
 ## Application
 
@@ -303,7 +303,7 @@ machine.
 - Containerized builds (`crops/poky` or equivalent), bind-mounting caches
 - Build matrix per branch / PR:
   - `astraos-image-dev` × `raspberrypi5`
-  - `astraos-image-dev` × `raspberrypi-cm5`
+  - `astraos-image-dev` × `raspberrypi-cm5-io-board`
   - `astraos-image-dev` × `imx8mp-var-som`
   - `astraos-image` × `astraos-imx8mp-mcb` (signed, on `main`/release branches)
 - Production signing: dedicated locked-down signing runner, HABv4 SRK +

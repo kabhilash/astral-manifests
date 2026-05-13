@@ -18,7 +18,7 @@ Same mapping as `astraos-build-image`:
 | User says | MACHINE |
 |---|---|
 | "raspberrypi5", "rpi 5", "pi 5" | `raspberrypi5` |
-| "cm5", "compute module 5" | `raspberrypi-cm5` |
+| "cm5", "compute module 5", "cm5 io board" | `raspberrypi-cm5-io-board` |
 | "variscite", "var-som", "symphony" | `imx8mp-var-som` |
 | "mcb", "main carrier board", "production carrier" | `astraos-imx8mp-mcb` |
 

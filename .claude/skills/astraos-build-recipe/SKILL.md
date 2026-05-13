@@ -55,7 +55,7 @@ User says "rebuild qtbase for raspberrypi5":
 
 User says "wipe sstate for libusb on cm5":
 ```
-./scripts/build recipe raspberrypi-cm5 libusb1 cleansstate
+./scripts/build recipe raspberrypi-cm5-io-board libusb1 cleansstate
 ```
 
 User says "drop me into the qtbase devshell on the variscite":

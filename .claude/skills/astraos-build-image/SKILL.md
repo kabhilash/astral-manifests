@@ -18,7 +18,7 @@ Map natural-language target names to the canonical MACHINE string:
 | User says | MACHINE |
 |---|---|
 | "raspberry pi 5", "rpi 5", "pi 5", "raspberrypi5" | `raspberrypi5` |
-| "compute module 5", "cm5", "rpi cm5", "raspberrypi-cm5" | `raspberrypi-cm5` |
+| "compute module 5", "cm5", "rpi cm5", "cm5 io board", "raspberrypi-cm5" | `raspberrypi-cm5-io-board` |
 | "variscite", "var-som", "symphony", "Symphony v1.7", "imx8mp-var-som" | `imx8mp-var-som` |
 | "mcb", "main carrier board", "the production carrier", "astraos-imx8mp-mcb" | `astraos-imx8mp-mcb` |
 
