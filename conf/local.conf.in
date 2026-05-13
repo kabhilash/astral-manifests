@@ -35,13 +35,24 @@ BB_DISKMON_DIRS ??= "\
 
 CONF_VERSION = "2"
 
-# Uniform TMPDIR across all MACHINEs. meta-imx-bsp sets
-# TMPDIR=${TOPDIR}/tmp-${LIBC} (-> tmp-glibc/) which made imx builds
-# diverge from rpi builds' tmp/. Force tmp/ everywhere so artefact
-# paths, scripts/build download, and per-MACHINE muscle memory stay
-# consistent. TMPDIR is in BB_HASHCONFIG_WHITELIST so the existing
-# sstate cache continues to hit; no full rebuild.
+# Uniform TMPDIR across all MACHINEs. Two things conspire to suffix
+# tmp/ with the C library name (-> tmp-glibc/) when nothing else
+# intervenes:
+#
+#   bitbake.conf:   TMPDIR ??= "${TOPDIR}/tmp"
+#   bitbake.conf:   TCLIBCAPPEND ??= "-${TCLIBC}"
+#   defaultsetup.conf: TMPDIR .= "${TCLIBCAPPEND}"
+#
+# The .= in defaultsetup is processed AFTER local.conf, so setting
+# TMPDIR alone is not enough - we have to also zero out TCLIBCAPPEND.
+# AstraOS only ships glibc; we don't multi-target the C library, so
+# losing the tmp-${TCLIBC} isolation costs us nothing.
+#
+# TMPDIR is in BB_HASHCONFIG_WHITELIST so sstate cache continues to
+# hit; the only re-work on the next build is relinking + re-creating
+# the tmp/ tree.
 TMPDIR = "${TOPDIR}/tmp"
+TCLIBCAPPEND = ""
 
 # meta-imx ships bbappends for FSL-distro recipes (fsl-image-gui-chromium,
 # packagegroup-fsl-*, etc.) that don't exist in the astraos distro. Bitbake
