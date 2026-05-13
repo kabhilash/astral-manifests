@@ -374,10 +374,10 @@ when the time comes.
 
 - Variscite BSP release notes:
   https://dev.variscite.com/var-som-mx8m-plus/mx8mp-yocto-scarthgap-6.6.y_2.2.2-v1.2/release-notes/
-- AstraOS (this repo): `git@github.com:kabhilash/astraos-manifests.git`
-- `meta-astrax`: `git@github.com:kabhilash/meta-astrax.git`
-- `meta-astrax-raspberrypi`: `git@github.com:kabhilash/meta-astrax-raspberrypi.git`
-- `meta-astrax-variscite`: `git@github.com:kabhilash/meta-astrax-variscite.git`
+- AstraOS (this repo): `https://github.com/kabhilash/astraos-manifests.git`
+- `meta-astrax`: `https://github.com/kabhilash/meta-astrax.git`
+- `meta-astrax-raspberrypi`: `https://github.com/kabhilash/meta-astrax-raspberrypi.git`
+- `meta-astrax-variscite`: `https://github.com/kabhilash/meta-astrax-variscite.git`
 - `nexus` (Rust connectivity manager): `https://github.com/kabhilash/nexus.git`
 - `astraX_BT` (XRF Benchtop application): sibling repo at `../astraX_BT/` —
   GitHub: `git@github.com:AstraAnalytical/astraX_BT.git` (different org;

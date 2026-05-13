@@ -20,8 +20,8 @@ What happens behind the scenes (no need to repeat each step manually):
 
 1. SSH to `akothapalli@10.11.12.20`
 2. `rm -rf /home/akothapalli/yocto/astraos`
-3. `git clone git@github.com:kabhilash/astraos-manifests.git /home/akothapalli/yocto/astraos`
-4. `repo init -u git@github.com:kabhilash/astraos-manifests.git -m manifests/default.xml`
+3. `git clone https://github.com/kabhilash/astraos-manifests.git /home/akothapalli/yocto/astraos`
+4. `repo init -u https://github.com/kabhilash/astraos-manifests.git -m manifests/default.xml`
 5. `repo sync -j16`
 
 `/home/akothapalli/yocto/sstate` and `/home/akothapalli/yocto/downloads`

@@ -17,7 +17,7 @@
   <remote name="varigit"   fetch="https://github.com/varigit/"/>
   <remote name="qt"        fetch="https://code.qt.io/yocto/"/>
   <remote name="rauc"      fetch="https://github.com/rauc/"/>
-  <remote name="kabhilash" fetch="git@github.com:kabhilash/"/>
+  <remote name="kabhilash" fetch="https://github.com/kabhilash/"/>
 
   <default revision="scarthgap" remote="yocto" sync-j="4"/>
 

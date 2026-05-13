@@ -48,7 +48,7 @@ BUILDER_PATH="${ASTRAOS_BUILDER_PATH:-/home/akothapalli/yocto/astraos}"
 BUILDER_HOST_ROOT="${ASTRAOS_BUILDER_HOST_ROOT:-$(dirname "${BUILDER_PATH}")}"
 
 # Canonical source of truth: GitHub.
-ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL:-git@github.com:kabhilash/astraos-manifests.git}"
+ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL:-https://github.com/kabhilash/astraos-manifests.git}"
 
 MODE=""    # auto by default; set by --local / --remote
 
