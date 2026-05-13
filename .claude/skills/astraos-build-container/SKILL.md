@@ -17,9 +17,9 @@ If the user explicitly says "build it locally" or similar, prepend `--local`:
 ```
 
 The script handles the SSH dispatch to the build machine
-(`akothapalli@10.11.12.20`, workspace `/yocto/astraos`) on its own when
-running in remote mode. Just invoke the command — the script knows what
-to do.
+(`akothapalli@10.11.12.20`, workspace `/home/akothapalli/yocto/astraos`)
+on its own when running in remote mode. Just invoke the command — the
+script knows what to do.
 
 The container image is tagged `astraos-builder:latest`. After it
 finishes, subsequent `./scripts/build image|sdk|recipe|...` calls will

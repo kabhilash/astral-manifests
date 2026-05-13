@@ -35,10 +35,11 @@ ask which one before running. The four valid options are listed above.
   no signing, no dm-verity).
 - `bitbake` runs on the AstraOS build machine via SSH (default), inside
   the devcontainer. The script handles all of that — just invoke it.
-- The image lands at `/yocto/astraos/build/tmp/deploy/images/<MACHINE>/`
+- The image lands at
+  `/home/akothapalli/yocto/astraos/build-<MACHINE>/tmp/deploy/images/<MACHINE>/`
   on the build machine when done. The user may want to scp the `.wic`
-  artefact to their dev box afterward, or use `flash`-style tooling
-  (out of scope for this skill).
+  artefact to their dev box afterward (the `scripts/build download`
+  subcommand wraps this), or use `flash`-style tooling.
 - First-time builds for a given MACHINE take ~1–2 hours (cold sstate);
   subsequent builds are far faster thanks to the per-MACHINE
-  `/yocto/sstate/<MACHINE>/` cache.
+  `/home/akothapalli/yocto/sstate/<MACHINE>/` cache.

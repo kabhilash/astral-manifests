@@ -38,10 +38,13 @@ PARALLEL_MAKE     ?= "-j ${@oe.utils.cpu_count()}"
 BB_HASHSERVE = "auto"
 BB_SIGNATURE_HANDLER = "OEEquivHash"
 
-# Caches on the build machine, mounted into the container at the same
-# path. /yocto is host-owned by the build machine; on a Mac running
-# --local, scripts/build falls back to named docker volumes mounted at
-# the same in-container paths so this stays portable.
+# Caches on the build machine, mounted into the container at the paths
+# below. On the build machine, scripts/build bind-mounts the host
+# directories `${BUILDER_HOST_ROOT}/{sstate,downloads}` (default
+# `/home/akothapalli/yocto/{sstate,downloads}`, NVMe-backed) onto these
+# in-container paths. On a Mac running --local, scripts/build falls
+# back to named docker volumes mounted at the same in-container paths
+# so this stays portable.
 #
 # SSTATE_DIR is per-MACHINE so each target gets its own cache namespace.
 # Trade-off: native/cross tools rebuild per MACHINE (some duplication);

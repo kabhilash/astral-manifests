@@ -31,7 +31,8 @@ or `imx8mp-var-som` while `mcb` hardware is pending.
 ## What the user gets
 
 A self-extracting `.sh` installer in
-`/yocto/astraos/build/tmp/deploy/sdk/` named something like
+`/home/akothapalli/yocto/astraos/build-<MACHINE>/tmp/deploy/sdk/` named
+something like
 `astraos-glibc-x86_64-astraos-sdk-cortexa53-<MACHINE>-toolchain-0.1.0.sh`
 on the build machine. Running it on a developer Mac/Linux box installs
 the cross-sysroot under `/opt/astraos-sdk/`. The user then sources
@@ -39,5 +40,5 @@ the cross-sysroot under `/opt/astraos-sdk/`. The user then sources
 build app code (e.g. `astraX_BT`) against the AstraOS target sysroot.
 
 Cold SDK builds take a while (the Qt6 stack is heavy); subsequent
-builds for the same MACHINE hit `/yocto/sstate/<MACHINE>/` and finish
-fast.
+builds for the same MACHINE hit `/home/akothapalli/yocto/sstate/<MACHINE>/`
+and finish fast.

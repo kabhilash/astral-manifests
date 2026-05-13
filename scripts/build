@@ -29,7 +29,8 @@
 #   ASTRAOS_BUILDER_HOST=10.11.12.20
 #   ASTRAOS_BUILDER_USER=akothapalli
 #   ASTRAOS_BUILDER_PORT=22
-#   ASTRAOS_BUILDER_PATH=~/AstraOS
+#   ASTRAOS_BUILDER_PATH=/home/akothapalli/yocto/astraos
+#   ASTRAOS_BUILDER_HOST_ROOT=/home/akothapalli/yocto  (parent of sstate/downloads on host)
 
 set -euo pipefail
 
@@ -40,7 +41,11 @@ IMAGE_TAG="astraos-builder:latest"
 BUILDER_HOST="${ASTRAOS_BUILDER_HOST:-10.11.12.20}"
 BUILDER_USER="${ASTRAOS_BUILDER_USER:-akothapalli}"
 BUILDER_PORT="${ASTRAOS_BUILDER_PORT:-22}"
-BUILDER_PATH="${ASTRAOS_BUILDER_PATH:-/yocto/astraos}"
+BUILDER_PATH="${ASTRAOS_BUILDER_PATH:-/home/akothapalli/yocto/astraos}"
+# Parent dir on host: holds astraos/, sstate/, downloads/. /yocto/ used to
+# live on a spinning disk; we now keep everything under the user's NVMe-
+# backed home to avoid build I/O contention.
+BUILDER_HOST_ROOT="${ASTRAOS_BUILDER_HOST_ROOT:-$(dirname "${BUILDER_PATH}")}"
 
 # Canonical source of truth: GitHub.
 ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL:-git@github.com:kabhilash/astraos-manifests.git}"
@@ -53,7 +58,7 @@ AstraOS build helper.
 
 Usage (most subcommands accept an optional --local | --remote prefix):
   scripts/build container                              Rebuild the devcontainer image
-  scripts/build clean                                  Wipe /yocto/astraos on builder + repo sync (sstate/downloads preserved)
+  scripts/build clean                                  Wipe ${BUILDER_PATH} on builder + repo sync (sstate/downloads preserved)
   scripts/build image       <MACHINE>                  Build astraos-image-dev for MACHINE
   scripts/build prod-image                             Build astraos-image (mcb production)
   scripts/build sdk         <MACHINE>                  Build astraos-sdk for MACHINE
@@ -117,26 +122,27 @@ _run() {
         bash -c "${cmd}"
     else
         _ensure_image
-        # Bind /yocto/sstate and /yocto/downloads from host when they exist
-        # (build machine layout); otherwise use named docker volumes mounted
-        # at the same in-container path. local.conf.in references
-        # /yocto/sstate and /yocto/downloads regardless.
+        # Bind host sstate/downloads from ${BUILDER_HOST_ROOT} when present
+        # (build machine layout, NVMe-backed); otherwise use named docker
+        # volumes mounted at the same in-container path. local.conf.in
+        # references /yocto/sstate and /yocto/downloads inside the container
+        # regardless of the host source.
         local sstate_mount dl_mount
-        if [ -d /yocto/sstate ]; then
-            sstate_mount="-v /yocto/sstate:/yocto/sstate"
+        if [ -d "${BUILDER_HOST_ROOT}/sstate" ]; then
+            sstate_mount="-v ${BUILDER_HOST_ROOT}/sstate:/yocto/sstate"
         else
             sstate_mount="-v astraos-sstate:/yocto/sstate"
         fi
-        if [ -d /yocto/downloads ]; then
-            dl_mount="-v /yocto/downloads:/yocto/downloads"
+        if [ -d "${BUILDER_HOST_ROOT}/downloads" ]; then
+            dl_mount="-v ${BUILDER_HOST_ROOT}/downloads:/yocto/downloads"
         else
             dl_mount="-v astraos-downloads:/yocto/downloads"
         fi
-        # Bind /yocto/astraos as the workspace when running on the builder;
+        # Bind ${BUILDER_PATH} as the workspace when running on the builder;
         # otherwise bind the local checkout dir.
         local workspace_src
-        if [ -d /yocto/astraos ] && [ "${ASTRAOS_ROOT}" = "/yocto/astraos" ]; then
-            workspace_src=/yocto/astraos
+        if [ -d "${BUILDER_PATH}" ] && [ "${ASTRAOS_ROOT}" = "${BUILDER_PATH}" ]; then
+            workspace_src="${BUILDER_PATH}"
         else
             workspace_src="${ASTRAOS_ROOT}"
         fi
@@ -231,7 +237,7 @@ if [ "${1:-}" = "download" ]; then
             exit 1
             ;;
     esac
-    REMOTE_WIC="/yocto/astraos/build-${MACHINE}/tmp/deploy/images/${MACHINE}/astraos-image-dev-${MACHINE}.rootfs.wic.zst"
+    REMOTE_WIC="${BUILDER_PATH}/build-${MACHINE}/tmp/deploy/images/${MACHINE}/astraos-image-dev-${MACHINE}.rootfs.wic.zst"
     echo ">>> fetching ${REMOTE_WIC}"
     echo ">>>   from ${BUILDER_USER}@${BUILDER_HOST}"
     echo ">>>   to   ${DEST}/"
@@ -251,27 +257,27 @@ if [ "${1:-}" = "clean" ]; then
         echo "ERROR: 'clean' targets the build machine; remove --local" >&2
         exit 1
     fi
-    echo ">>> wiping /yocto/astraos on ${BUILDER_USER}@${BUILDER_HOST} and re-bootstrapping from GitHub"
-    echo ">>> /yocto/{sstate,downloads} preserved"
+    echo ">>> wiping ${BUILDER_PATH} on ${BUILDER_USER}@${BUILDER_HOST} and re-bootstrapping from GitHub"
+    echo ">>> ${BUILDER_HOST_ROOT}/{sstate,downloads} preserved"
     if [ -t 0 ] && [ -t 1 ]; then
         clean_ssh_tty="-t"
     else
         clean_ssh_tty=""
     fi
     exec ssh ${clean_ssh_tty} -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
-        ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL}" 'bash -s' <<'REMOTE_CLEAN'
+        ASTRAOS_GIT_URL="${ASTRAOS_GIT_URL}" BUILDER_PATH="${BUILDER_PATH}" 'bash -s' <<'REMOTE_CLEAN'
 set -euo pipefail
 cd /
-rm -rf /yocto/astraos
-git clone "${ASTRAOS_GIT_URL}" /yocto/astraos
-cd /yocto/astraos
+rm -rf "${BUILDER_PATH}"
+git clone "${ASTRAOS_GIT_URL}" "${BUILDER_PATH}"
+cd "${BUILDER_PATH}"
 echo ">>> HEAD = $(git log --oneline -1)"
 echo ">>> repo init"
 repo init -u "${ASTRAOS_GIT_URL}" -m manifests/default.xml --no-clone-bundle
 echo ">>> repo sync"
 repo sync -j16 --no-clone-bundle
 echo ">>> sources/:"
-ls /yocto/astraos/sources/ | sort
+ls "${BUILDER_PATH}/sources/" | sort
 REMOTE_CLEAN
 fi
 
