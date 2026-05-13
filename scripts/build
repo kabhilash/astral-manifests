@@ -237,7 +237,19 @@ if [ "${1:-}" = "download" ]; then
             exit 1
             ;;
     esac
-    REMOTE_WIC="${BUILDER_PATH}/build-${MACHINE}/tmp/deploy/images/${MACHINE}/astraos-image-dev-${MACHINE}.rootfs.wic.zst"
+    # TMPDIR varies: vanilla poky uses tmp/, but meta-imx sets
+    # TMPDIR=${TOPDIR}/tmp-${LIBC} so variscite/mcb builds land in
+    # tmp-glibc/. Probe both with a single ssh round-trip and pick the
+    # one that exists.
+    REMOTE_WIC_REL="deploy/images/${MACHINE}/astraos-image-dev-${MACHINE}.rootfs.wic.zst"
+    BUILD_DIR="${BUILDER_PATH}/build-${MACHINE}"
+    REMOTE_WIC=$(ssh -p "${BUILDER_PORT}" "${BUILDER_USER}@${BUILDER_HOST}" \
+        "for d in tmp tmp-glibc; do f=${BUILD_DIR}/\$d/${REMOTE_WIC_REL}; [ -e \"\$f\" ] && { echo \"\$f\"; exit 0; }; done; exit 1")
+    if [ -z "${REMOTE_WIC}" ]; then
+        echo "ERROR: no wic.zst found under ${BUILD_DIR}/{tmp,tmp-glibc}/${REMOTE_WIC_REL}" >&2
+        echo "       (did the build finish? try scripts/build image ${MACHINE} first)" >&2
+        exit 1
+    fi
     echo ">>> fetching ${REMOTE_WIC}"
     echo ">>>   from ${BUILDER_USER}@${BUILDER_HOST}"
     echo ">>>   to   ${DEST}/"
