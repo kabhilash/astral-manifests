@@ -18,7 +18,7 @@ script first sources `setup-environment <MACHINE>` (which writes
 ## Extracting parameters from the user's request
 
 **MACHINE** — same mapping as `astraos-build-image` (raspberrypi5,
-raspberrypi-cm5-io-board, imx8mp-var-som, astraos-imx8mp-mcb). If
+raspberrypi-cm5-io-board, imx8mp-var-dart, astraos-imx8mp-mcb). If
 unspecified, ask.
 
 **bitbake-args** — the flags + recipes the user mentioned, in order.
@@ -51,7 +51,7 @@ User says "force fetch everything for cm5":
 User says "show me the full env for the spdlog recipe on the
 variscite":
 ```
-./scripts/build bitbake imx8mp-var-som -e spdlog
+./scripts/build bitbake imx8mp-var-dart -e spdlog
 ```
 
 If the user's request fits the simpler `image` / `prod-image` / `sdk` /

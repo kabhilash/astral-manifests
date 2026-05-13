@@ -6,7 +6,7 @@
 # MACHINE may be:
 #   raspberrypi5                 (RPi 5 dev)
 #   raspberrypi-cm5-io-board     (RPi CM5 on the official CM5 IO Board, dev)
-#   imx8mp-var-som               (Variscite Symphony v1.7 dev - until mcb arrives)
+#   imx8mp-var-dart               (Variscite Symphony v1.7 dev - until mcb arrives)
 #   astraos-imx8mp-mcb           (production, mcb carrier - hardware pending)
 #
 # Env vars consumed:
@@ -59,12 +59,12 @@ case "$MACHINE" in
   ${SOURCES_DIR}/meta-astrax-raspberrypi \\
 "
         ;;
-    imx8mp-var-som|astraos-imx8mp-mcb)
+    imx8mp-var-dart|astraos-imx8mp-mcb)
         # NXP i.MX BSP stack must be listed before the Variscite layers
         # so the fsl-bsp-release / meta-freescale collections are
         # discovered first. meta-variscite-hab is BBLAYERS-included only
         # for the production MACHINE (mcb) where HABv4 signing matters;
-        # imx8mp-var-som (Symphony dev board) skips it.
+        # imx8mp-var-dart (Symphony dev board) skips it.
         MACHINE_LAYERS="  ${SOURCES_DIR}/meta-arm/meta-arm \\
   ${SOURCES_DIR}/meta-arm/meta-arm-toolchain \\
   ${SOURCES_DIR}/meta-clang \\
@@ -85,7 +85,7 @@ case "$MACHINE" in
         ;;
     *)
         echo "ERROR: unknown MACHINE '${MACHINE}'" >&2
-        echo "Valid: raspberrypi5, raspberrypi-cm5-io-board, imx8mp-var-som, astraos-imx8mp-mcb" >&2
+        echo "Valid: raspberrypi5, raspberrypi-cm5-io-board, imx8mp-var-dart, astraos-imx8mp-mcb" >&2
         return 1
         ;;
 esac

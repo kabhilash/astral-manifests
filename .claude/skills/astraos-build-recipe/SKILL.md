@@ -60,7 +60,7 @@ User says "wipe sstate for libusb on cm5":
 
 User says "drop me into the qtbase devshell on the variscite":
 ```
-./scripts/build recipe imx8mp-var-som qtbase devshell
+./scripts/build recipe imx8mp-var-dart qtbase devshell
 ```
 
 If the user wants a more complex BitBake invocation (multiple recipes,

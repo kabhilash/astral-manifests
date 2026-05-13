@@ -2,7 +2,7 @@
 <!--
   AstraOS google-repo manifest.
 
-  Pulls every layer needed to build either dev (raspberrypi5/raspberrypi-cm5-io-board/imx8mp-var-som)
+  Pulls every layer needed to build either dev (raspberrypi5/raspberrypi-cm5-io-board/imx8mp-var-dart)
   or production (astraos-imx8mp-mcb) image variants. The MACHINE-specific layer
   selection happens in conf/bblayers.conf.in via scripts/setup-environment.
 

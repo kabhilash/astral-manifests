@@ -19,7 +19,7 @@ astraos-image` (note: not `-dev`).
 
 - User wants RPi5 or CM5 build → `astraos-build-image`
 - User wants Variscite Symphony (dev) build → `astraos-build-image` with
-  `imx8mp-var-som`
+  `imx8mp-var-dart`
 - User wants the cross-SDK installer → `astraos-build-sdk`
 
 ## Important caveats to surface for the user

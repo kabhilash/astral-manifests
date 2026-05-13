@@ -10,7 +10,7 @@ its repository.
 | Role | SoC | Board | MACHINE | Status |
 |---|---|---|---|---|
 | Production | NXP i.MX8M Plus | Variscite VAR-SOM-MX8M-Plus on custom carrier `mcb` | `astraos-imx8mp-mcb` | **Hardware pending** — MACHINE spec authored, not yet exercised |
-| Variscite dev | NXP i.MX8M Plus | Variscite VAR-SOM-MX8M-Plus on Variscite Symphony **v1.7** | `imx8mp-var-som` (upstream) | Active — primary Variscite dev target until `mcb` arrives |
+| Variscite dev | NXP i.MX8M Plus | Variscite VAR-SOM-MX8M-Plus on Variscite Symphony **v1.7** | `imx8mp-var-dart` (Variscite's combined machine name for both DART-MX8M-PLUS and VAR-SOM-MX8M-Plus) | Active — primary Variscite dev target until `mcb` arrives |
 | RPi dev | Broadcom BCM2712 | Raspberry Pi 5 | `raspberrypi5` (upstream) | Active |
 | RPi dev | Broadcom BCM2712 | Raspberry Pi Compute Module 5 on the official CM5 IO Board | `raspberrypi-cm5-io-board` (upstream) | Active |
 
@@ -90,7 +90,7 @@ meta-astrax-raspberrypi/           thin: RPi-specific overrides only
 meta-astrax-variscite/             Variscite + mcb-carrier overrides
 ├─ conf/machine/astraos-imx8mp-mcb.conf
 ├─ recipes-bsp/                    U-Boot mcb defconfig fragment, RAUC bootcount
-├─ recipes-kernel/linux-variscite/files/imx8mp-var-som-mcb.dts
+├─ recipes-kernel/linux-variscite/files/imx8mp-var-dart-mcb.dts
 ├─ recipes-graphics/               Qt eglfs_kms_imx config for Vivante
 ├─ recipes-multimedia/             imx-gpu-viv .bbappend if needed
 └─ wic/                            astraos-variscite.wks.in
@@ -215,7 +215,7 @@ Two image recipes in `meta-astrax/recipes-images/` sharing a base:
   - `gdbserver`, `strace`, `tcpdump`, `perf`, `htop`
   - Root SSH with known dev key
   - journald to console
-  - Targets `raspberrypi5`, `raspberrypi-cm5-io-board`, `imx8mp-var-som`
+  - Targets `raspberrypi5`, `raspberrypi-cm5-io-board`, `imx8mp-var-dart`
 
 ## Application
 
@@ -304,7 +304,7 @@ machine.
 - Build matrix per branch / PR:
   - `astraos-image-dev` × `raspberrypi5`
   - `astraos-image-dev` × `raspberrypi-cm5-io-board`
-  - `astraos-image-dev` × `imx8mp-var-som`
+  - `astraos-image-dev` × `imx8mp-var-dart`
   - `astraos-image` × `astraos-imx8mp-mcb` (signed, on `main`/release branches)
 - Production signing: dedicated locked-down signing runner, HABv4 SRK +
   RAUC bundle keys held in HSM, accessed via PKCS#11. Keys never leave HSM,
